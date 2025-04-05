@@ -1,0 +1,25 @@
+#!/bin/bash
+
+KALI_DIR="/opt/kali"
+PKG_DIR="kali-packages"
+CLONE_DIR="$KALI_DIR/$PKG_DIR"
+REPO_LIST="$KALI_DIR/repos.txt"
+
+mkdir -p "$CLONE_DIR"
+cd "$CLONE_DIR" || exit 1
+
+echo "[*] Fetching repo URLs from GitLab..."
+for page in {1..20}; do
+  curl --silent "https://gitlab.com/api/v4/groups/kalilinux%2Fpackages/projects?per_page=100&page=$page" \
+  | jq -r '.[].http_url_to_repo'
+done > "$REPO_LIST"
+
+echo "[*] Saved repo list to $REPO_LIST"
+echo "[*] Starting clone of repositories..."
+
+while read -r repo; do
+    echo "Cloning $repo..."
+    git clone --depth 1 "$repo" || echo "❌ Failed to clone $repo"
+done < "$REPO_LIST"
+
+echo "[✓] Done cloning all repositories into $CLONE_DIR"
