@@ -18,7 +18,6 @@ install_with_tmp() {
   echo "[✓] Installed $name"
 }
 
-
 # 0trace
 SRC_DIR="$(mktemp -d /tmp/tmp-src-XXXXXX)"
 echo "[*] Downloading 0trace files to $SRC_DIR..."
@@ -51,5 +50,49 @@ cd && rm -rf above
 # acccheck
 install_with_tmp "acccheck" "https://raw.githubusercontent.com/qashqao/acccheck/refs/heads/master/acccheck.pl" "acccheck.pl"
 
+# acstore
+pip install acstore
+
+# aesedb
+pip install aesedb
+
+# aiocmd
+pip install aiocmd
+
+# aioconsole
+pip install aioconsole
+
+# aiohttp-apispec
+pip install aiohttp-apispec
+
+# aiomultiprocess
+pip install aiomultiprocess
+
+# aiosmb
+pip install aiosmb
+
+# aiowinreg
+pip install aiowinreg
+
+# airgeddon
+sudo pacman -Sy base-devel libnl openssl ethtool util-linux zlib libpcap sqlite pcre2 hwloc cmocka hostapd wpa_supplicant tcpdump screen iw usbutils pciutils expect aircrack-ng wireshark-cli
+install_with_tmp "airgeddon" "https://raw.githubusercontent.com/v1s1t0r1sh3r3/airgeddon/refs/heads/master/airgeddon.sh" "airgeddon.sh"
+
+# altdns
+pip install py-altdns
+
+# amap - deprecated, use nmap
+
+# amass
+go install -v github.com/owasp-amass/amass/v4/...@master
+
+# apache-users
+install_with_tmp "apache-users" "https://gitlab.com/kalilinux/packages/apache-users/-/raw/kali/master/apache2.1.pl" "apache2.1.pl"
+
 # feroxbuster
 curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s $HOME/.local/bin
+
+# sipvicious-ng (replaces ace-voip)
+echo "[*] Installing sipvicious-ng (replaces ace-voip)..."
+pip install sipvicious
+echo "[✓] Installed sipvicious: svmap, svwar, svcrack, svcrash"

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+BIN_DIR="$HOME/.local/bin"
+mkdir -p "$BIN_DIR"
+
+install_with_tmp() {
+  local name=$1
+  local url=$2
+  local filename=$3
+  SRC_DIR="$(mktemp -d /tmp/tmp-src-XXXXXX)"
+  echo "[*] Installing $name from $url..."
+  curl -sL "$url" -o "$SRC_DIR/$filename"
+  chmod +x "$SRC_DIR/$filename"
+  cp "$SRC_DIR/$filename" "$BIN_DIR/$name"
+  rm -rf "$SRC_DIR"
+  echo "[✓] Installed $name"
+}
+
+install_with_tmp "apache-users" "https://gitlab.com/kalilinux/packages/apache-users/-/raw/kali/master/apache2.1.pl" "apache2.1.pl"
