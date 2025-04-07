@@ -26,6 +26,7 @@ echo "[*] Saved cleaned repo names to $REPO_NAMES"
 while read -r repo_name; do
   echo "--------------------------------"
   echo "[$(date)] Attempting to install $repo_name via pacman..." | tee -a "$LOGFILE"
+  
   if pacman -Qi "$repo_name" &> /dev/null; then
     echo "[$(date)] $repo_name already installed." | tee -a "$LOGFILE"
   elif pacman -Si "$repo_name" &> /dev/null; then
@@ -33,17 +34,11 @@ while read -r repo_name; do
       echo "[$(date)] Successfully installed $repo_name via pacman." | tee -a "$LOGFILE"
     else
       echo "[$(date)] ERROR: Failed to install $repo_name via pacman." | tee -a "$LOGFILE"
-    fi
-  else
-    echo "[$(date)] $repo_name not found in pacman. Trying pip..." | tee -a "$LOGFILE"
-    if pip show "$repo_name" &> /dev/null; then
-      echo "[$(date)] $repo_name already installed via pip." | tee -a "$LOGFILE"
-    elif pip install "$repo_name" >> "$LOGFILE" 2>&1; then
-      echo "[$(date)] Successfully installed $repo_name via pip." | tee -a "$LOGFILE"
-    else
-      echo "[$(date)] ERROR: Failed to install $repo_name via pip. Marking for manual build." | tee -a "$LOGFILE"
       echo "$repo_name" >> "$MANUAL_LIST"
     fi
+  else
+    echo "[$(date)] $repo_name not found in pacman. Marking for manual build." | tee -a "$LOGFILE"
+    echo "$repo_name" >> "$MANUAL_LIST"
   fi
 done < "$REPO_NAMES"
 
