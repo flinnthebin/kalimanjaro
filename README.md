@@ -1,2 +1,3 @@
-# kali-clone
-Kali on Manjaro
+# kali-on-arch
+
+well ackshually kali on manjaro
