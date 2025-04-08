@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e
+
+LOGFILE="/opt/kali/install.log"
+KALI_DIR="/opt/kali"
+PKG_DIR="kali-packages"
+CLONE_DIR="$KALI_DIR/$PKG_DIR"
+REPO_LIST="$KALI_DIR/repos.txt"
+REPO_NAMES="$KALI_DIR/repo_names.txt"
+MANUAL_LIST="$KALI_DIR/manual_build.txt"
+
+mkdir -p "$CLONE_DIR"
+cd "$CLONE_DIR" || exit 1
+
+echo "[*] Fetching repo URLs from GitLab..."
+for page in {1..20}; do
+  curl --silent "https://gitlab.com/api/v4/groups/kalilinux%2Fpackages/projects?per_page=100&page=$page" \
+  | jq -r '.[].http_url_to_repo'
+done > "$REPO_LIST"
+echo "[*] Saved full repo list to $REPO_LIST"
+
+sed 's|https://gitlab.com/kalilinux/packages/||; s|\.git$||' "$REPO_LIST" > "$REPO_NAMES"
+echo "[*] Saved cleaned repo names to $REPO_NAMES"
+> "$MANUAL_LIST"
+
+while read -r repo_name; do
+  echo "--------------------------------"
+  echo "[$(date)] Attempting to install $repo_name via pacman..." | tee -a "$LOGFILE"
+  
+  if pacman -Qi "$repo_name" &> /dev/null; then
+    echo "[$(date)] $repo_name already installed." | tee -a "$LOGFILE"
+  elif pacman -Si "$repo_name" &> /dev/null; then
+    if sudo pacman -S --noconfirm "$repo_name" >> "$LOGFILE" 2>&1; then
+      echo "[$(date)] Successfully installed $repo_name via pacman." | tee -a "$LOGFILE"
+    else
+      echo "[$(date)] ERROR: Failed to install $repo_name via pacman." | tee -a "$LOGFILE"
+      echo "$repo_name" >> "$MANUAL_LIST"
+    fi
+  else
+    echo "[$(date)] $repo_name not found in pacman. Marking for manual build." | tee -a "$LOGFILE"
+    echo "$repo_name" >> "$MANUAL_LIST"
+  fi
+done < "$REPO_NAMES"
+
+echo "--------------------------------"
+echo "[✓] Installation process complete!"
+echo "The following tools require manual installation:"
+cat "$MANUAL_LIST"

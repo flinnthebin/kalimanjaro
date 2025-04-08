@@ -1,6 +1,4 @@
 android-sdk
-apispec
-apispec-webframeworks
 apktool
 apple-bleee
 apt2
