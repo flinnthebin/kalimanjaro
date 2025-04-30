@@ -267,9 +267,26 @@ pip_uv_sandbox asysocks asysocks
 # autorecon
 git_uv_sandbox "autorecon" "https://github.com/Tib3rius/AutoRecon.git"
 
+# azurehound
+go install github.com/bloodhoundad/azurehound/v2@latest
+
+# b374k
+# TODO: THIS IS NOT DONE
+
+# backoff
+pip_uv_sandbox backoff
+
+# base91
+pip_uv_sandbox base91
+
+# bed https://github.com/paran0ids0ul/bedfuzzer
+# TODO: THIS IS NOT DONE
+
+# beef
+# TODO: THIS IS NOT DONE
 
 # feroxbuster
-curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s $HOME/.local/bin
+curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s "$HOME/.local/bin"
 
 # sipvicious-ng (replaces ace-voip)
 pip_uv_sandbox sipvicious sipvicious
