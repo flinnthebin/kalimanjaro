@@ -1,0 +1,733 @@
+0trace - traceroute helper that uses idle scanning to identify stateful firewalls (legacy, build from source).
+aardwolf - Async RDP client/lib (Skelsec) for Windows ops ((optional) tool, active, pipx install aardwolf).
+aesedb - ESE/EDB parsing lib used by AD/Windows tooling (delete, library; use SleuthKit/impacket/minidump tools instead).
+aiosmb - Async SMB client (Skelsec) useful for AD ops (active, pipx install aiosmb).
+aiowinreg - Async remote Registry access lib ((optional), active, pipx install aiowinreg).
+aircrack-ng - Wi-Fi WEP/WPA suite (active, pacman).
+airgeddon - Wi-Fi audit orchestrator (active, yay).
+altdns - Permutation-based subdomain discovery (active, pipx install altdns).
+amap - Application mapper (banner/proto ID; old but handy) (legacy, build from source).
+amass - Large-scale DNS/OSINT subdomain enum (active, yay).
+android-sdk - Android tooling (reverse eng / mobile testing) (optional tool, active, yay, heavy).
+apache-users - Enumerate Apache user dirs (legacy, build from source).
+apktool - Android APK reverse-engineering (active, build from source).
+apple-bleee - Apple BLE research/exploit suite (active, build from source).
+apt2 - Automated penetration testing orchestrator (legacy, build from source).
+arachni - Web app scanner (Ruby; archived but still usable) (legacy, build from source; note: deprecated upstream).
+arjun - Parameter discovery for web endpoints (active, yay).
+arkime - Full-packet capture/indexing (formerly Moloch) (active, build from source / docker; heavy service).
+armitage - Metasploit GUI team-collab client (legacy, build from source).
+arp-scan - Fast ARP network discovery (active, pacman).
+asleap - Cisco LEAP cracking tools (legacy, yay).
+assetfinder - Quick domain asset discovery (Tomnomnom) (active, yay).
+automater - OSINT aggregator for IPs/URLs/domains (legacy, build from source).
+autopsy - Forensics GUI (Sleuth Kit front-end) (active, yay).
+autorecon - Automated network recon orchestrator (active, pipx install autorecon).
+axel - Multi-threaded HTTP/FTP downloader (useful utility) (active, pacman).
+azurehound - Azure BloodHound data collector (active, npm i -g azurehound).
+b374k - Single-file PHP web shell (red team/lab use only) ((lab-only), legacy, build from source).
+backdoor-factory - Patch binaries on the fly to add shellcode (legacy, build from source).
+base91 - Base91 encoder/decoder (active, yay).
+bbqsql - Blind SQLi framework (active, pipx install bbqsql).
+bdfproxy - MITM binary patcher for installers (legacy, build from source).
+bed - Old-school network protocol fuzzer (legacy, yay).
+beef-xss - Browser Exploitation Framework (active, yay).
+berate-ap - Rogue AP setup/automation ((optional), legacy, build from source).
+bettercap - Versatile MITM/Wi-Fi/BLE network tool (active, pacman).
+bettercap-caplets - Official caplet scripts for bettercap (active, pacman).
+bettercap-ui - Web UI for bettercap sessions ((optional), active, yay).
+bing-ip2hosts - Reverse-IP host discovery via Bing (legacy, yay).
+binwalk - Firmware/ROM analysis (active, pacman).
+blindelephant - Webapp fingerprinting via static files (legacy, build from source).
+bloodhound - AD attack path graphing (active, yay).
+bloodhound.py - Python ingestor for BloodHound (active, pipx install bloodhound).
+bloodyad - AD object manipulation tool (active, pipx install bloodyAD or build from source).
+blue-hydra - Bluetooth scanning/triage ((optional), active, build from source).
+bluelog - Simple Bluetooth discovery logger (active, yay).
+bluemaho - Bluetooth audit suite ((optional), legacy, build from source).
+bluepot - Bluetooth honeypot ((lab-only), legacy, build from source).
+blueranger - Bluetooth RSSI tracking ((optional), legacy, build from source).
+bluesnarfer - OBEX phonebook snarfing (legacy, build from source).
+bluez - Core Bluetooth stack/tools (active, pacman).
+bopscrk - Wordlist generator from passive scraping (active, build from source / pipx).
+braa - SNMP mass scanner (legacy, build from source).
+brcmfmac-nexmon-dkms - Nexmon DKMS for Broadcom monitor/injection ((hardware-specific), active, build from source).
+brotli - Compression tool + lib (CLI can be handy) (active, pacman).
+bruteshark - Network forensic/creds extractor from PCAPs (active, build from source).
+brutespray - Spray creds using parsed nmap results (active, pipx install brutespray).
+bulk-extractor - Forensic bulk artifact extractor (active, build from source).
+bully - WPS brute-force/attack tool (active, pacman).
+burpsuite - Web appsec proxy/scanner (active, yay or upstream; license note).
+bytecode-viewer - Java/Android bytecode reverser GUI (active, yay).
+cabby - TAXII client (STIX/TAXII ops) ((optional), active, pipx install cabby).
+caido - Web security testing platform (active, yay: caido-cli or use upstream appimage).
+caido-cli - CLI for Caido web security testing (active, yay).
+caldera - Automated adversary emulation platform (active, build from source or docker).
+capstone - Disassembly framework (keep as dependency for RE tools, active, pacman).
+casefile - Maltego CaseFile standalone app (legacy, build from source).
+cdpsnarf - Cisco Discovery Protocol sniffer (legacy, build from source).
+censys-python - Python client for Censys API (active, pipx install censys if using).
+certgraph - Crawl domains to map SSL/TLS certs (active, build from source).
+certipy-ad - AD CS abuse toolkit (active, pipx install certipy-ad).
+cewl - Custom wordlist generator from websites (active, build from source).
+chainsaw - Hunt & triage Windows event logs (active, build from source).
+changeme - Default creds scanner (active, build from source).
+cherrytree - Hierarchical note-taking (for engagements) (active, pacman).
+chisel - TCP/UDP tunnel over HTTP (active, yay).
+chntpw - Offline Windows registry editor/password reset (active, pacman).
+ciphey - Automated decryption/decoding tool (active, yay).
+cisco-auditing-tool - Cisco router auditing (legacy, build from source).
+cisco-global-exploiter - Cisco vuln exploitation tool (legacy, yay).
+cisco-ocs - Cisco attack scripts (legacy, build from source).
+cisco-torch - Cisco service scanner (legacy, build from source).
+cloudbrute - Public cloud asset enumeration (active, build from source).
+cloud-enum - Cloud service account enumeration (active, pipx install cloud-enum).
+cloudscraper - Cloudflare/UAM bypass HTTP lib ((optional), active, pipx install cloudscraper).
+clusterd - Remote app server exploitation framework (legacy, build from source).
+cmospwd - Dump CMOS BIOS passwords (legacy, yay).
+cmseek - CMS detection & exploit scanning (active, build from source).
+coercer - Coerce Windows hosts into authentication (active, pipx install coercer).
+commix - Command injection exploitation tool (active, yay).
+cookie-cadger - Session hijacking from network traffic (legacy, build from source).
+copy-router-config - Grab configs from Cisco/routers via SNMP/TFTP (legacy, build from source).
+cosign - Container image signing/verification ((optional), active, pacman).
+couchdb - Apache CouchDB (only needed if testing Couch apps) (optional, active, pacman).
+covenant-kbx - Covenant C2 prebuilt KBX package (active, build from source).
+cowpatty - WPA2 PSK cracking (active, pacman).
+cpe - CPE name tools (naming standard handling) ((optional), active, build from source).
+crackle - Crack BLE encryption (active, build from source).
+crackmapexec - Swiss Army knife for network/AD exploitation (active, build from source).
+creddump - Extract creds from Windows registry dumps (legacy, build from source).
+creddump7 - Dump Windows creds from registry hives (legacy, build from source).
+creepy - Geolocation OSINT from social media/EXIF (legacy, build from source).
+cri-tools - Kubernetes CRI utilities (optional, active, build from source).
+crlfuzz - CRLF injection fuzzing for headers/routes (active, build from source).
+crowbar - Brute-force for RDP/SSH/OpenVPN (legacy, build from source).
+crunch - Wordlist generator (active, yay).
+cryptcat - Netcat with encryption (legacy, build from source).
+cryptsetup - LUKS/disk encryption tools (active, pacman).
+cryptsetup-nuke-keys - LUKS “nuke” key helpers (delete, system-hardening feature not needed for toolkit).
+cryptsetup-nuke-password - LUKS “nuke” password helpers (delete, system-hardening feature not needed for toolkit).
+cti-taxii-client - TAXII client for threat intel feeds (optional, active, pipx install).
+cuckoo - Malware analysis sandbox (legacy, build from source/docker; heavy service).
+cuckoo-kbx - Cuckoo signatures/rules bundle (optional, legacy, build from source).
+cupid-wpa - EAP/TLS/WPA CUPID attack tester (legacy, build from source).
+curlftpfs - Mount FTP as filesystem (active, pacman).
+cutycapt - Headless web page screenshot (legacy, build from source).
+cvss - CLI CVSS score calculator (optional, active, pipx install).
+cyberchef - Multi-purpose data “Swiss Army Knife” (optional, active, build from source/AppImage).
+cymothoa - Linux process injection/backdoor (legacy, build from source).
+datasploit - OSINT framework (legacy, build from source).
+davtest - WebDAV PUT/EXEC testing (legacy, build from source).
+dbd - Encrypted backdoor/Netcat clone (legacy, build from source).
+dbeaver - Universal DB GUI (optional, active, pacman).
+dbpwaudit - Database password audit toolkit (legacy, build from source).
+dc3dd - Forensic dd with hashing/throttling (legacy, yay).
+ddrescue - Data recovery imager (active, pacman).
+deblaze - BlazeDS/AMF penetration tester (legacy, build from source).
+debootstrap - Create Debian/Ubuntu chroots (optional, active, pacman).
+defectdojo - AppSec/vuln management platform (optional, active, build from source/docker; heavy service).
+detect-it-easy - “DIE” executable packer/format analyzer (active, build from source).
+device-pharmer - Automated device exploitation/orchestration (legacy, build from source).
+dex2jar - Convert Android .dex to .jar (active, yay).
+dff - Digital Forensics Framework GUI (legacy, build from source).
+dfvfs - Digital Forensics Virtual File System (optional, active, pipx install).
+dhcpig - DHCP exhaustion/DoS testing (legacy, build from source).
+dirb - Web content brute forcer (legacy, yay).
+dirbuster - GUI directory brute forcer (legacy, build from source).
+dirsearch - Fast directory brute forcer (active, yay).
+dmitry - Deepmagic Information Gathering Tool (active, yay).
+dnmap - Nmap distributed wrapper (legacy, build from source).
+dns2tcp - TCP over DNS tunnel (active, build from source).
+dnscat2 - C2 channel over DNS (active, build from source).
+dnschef - DNS proxy/spoofer (active, build from source).
+dnsenum - Perl-based DNS enumeration (active, build from source).
+dnsgen - Generate permutations of subdomains (active, pipx install dnsgen).
+dnsmap - Passive DNS network mapper (active, yay).
+dnsrecon - DNS recon/enumeration tool (active, build from source).
+dnstracer - Trace DNS delegation path (active, yay).
+dnswalk - DNS zone walker/checker (active, yay).
+dnsx - DNS toolkit (ProjectDiscovery) (active, yay).
+donut-shellcode - Generate shellcode from PE files (active, build from source).
+doona - Fork of Bed network fuzzer (active, build from source).
+dos2unix - Text file line-ending converter (active, pacman; utility).
+dotdotpwn - Directory traversal fuzzer (active, build from source).
+dpkg - Debian package manager (active, pacman; utility).
+dploot - Dump credentials from DPAPI blobs (active, pipx install dploot).
+dradis - Pentest collaboration/reporting platform ((optional), active, build from source/docker; heavy service).
+dronekit - Python API for drone/autopilot dev ((optional), active, pipx install dronekit; niche hardware).
+drozer - Android app security testing framework (legacy but useful, build from source).
+dscan - Distributed scanner orchestrator (legacy, build from source).
+dsnap - Disk snapshot analysis tool (legacy, build from source).
+dufflebag - Search public cloud buckets for secrets (active, build from source).
+dumpsterdiver - Find secrets in large data repos (active, pipx install dumpsterdiver).
+dumpzilla - Extract Firefox profiles/artifacts (active, build from source).
+dvwa - Damn Vulnerable Web App ((lab-only), active, build from source).
+eaphammer - Rogue AP/EAP attack suite (active, build from source).
+eapmd5pass - EAP-MD5 challenge/response cracker (legacy, build from source).
+edb-debugger - GUI debugger (Evan’s Debugger) (active, yay).
+eksctl - EKS cluster CLI (active, pacman).
+email2phonenumber - OSINT: guess phone numbers from email (active, pipx install email2phonenumber).
+emailharvester - Email address harvester from search engines (legacy, build from source).
+enum4linux - SMB/NetBIOS enumeration (active, yay).
+enum4linux-ng - Updated fork of enum4linux (active, build from source).
+enumiax - SIP/VoIP username enumerator (legacy, build from source).
+eresi - Reverse engineering framework (legacy, build from source).
+erlang17 - Erlang/OTP v17 ((optional), build from source; dependency for some old tools).
+ettercap - MITM/sniffing suite (active, pacman).
+evilginx2 - Phishing proxy w/ 2FA bypass (active, build from source).
+evil-ssdp - SSDP spoofer (active, build from source).
+evil-winrm - WinRM shell for pentesting (active, pipx install evil-winrm).
+exe2hexbat - Convert binary to hex batch file (legacy, build from source).
+exiflooter - Extract geolocation from images (active, build from source).
+exploitdb - Exploit database CLI (active, pacman).
+exploitdb-bin-sploits - Binary exploit pack for exploitdb (active, build from source; optional).
+exploitdb-papers - Papers from exploitdb archive (optional, build from source).
+extundelete - Recover deleted files from ext3/ext4 (active, yay).
+eyewitness - Screenshot and info gathering for web/rdp/vnc (active, build from source).
+faraday-agent-dispatcher - Faraday multi-agent orchestrator (optional, active, build from source).
+faraday-angular-frontend - Faraday web UI (optional, active, build from source).
+faraday-cli - CLI client for Faraday (optional, active, build from source).
+faraday-plugins - Plugin pack for Faraday (optional, active, build from source).
+fcrackzip - ZIP password cracker (active, pacman).
+fern-wifi-cracker - Wi-Fi WEP/WPA GUI cracker (active, yay).
+feroxbuster - Fast recursive web content discovery (active, yay).
+ferret-sidejack - HTTP session hijacking tool (legacy, yay).
+ffuf - Fuzzing web directories and parameters (active, yay).
+fglrx-driver - AMD Catalyst legacy driver ((hardware-specific), skip unless needed).
+fierce - DNS recon (active, build from source).
+fiked - Fake KDC (Kerberos) server (legacy, build from source).
+fimap - File inclusion vulnerability scanner (legacy, build from source).
+finalrecon - OSINT + recon framework (active, pipx install finalrecon).
+findmyhash - Hash lookup tool (active, build from source).
+findomain - Fast subdomain enumerator (active, pacman).
+firewalk - Firewalking for firewall rule mapping (active, yay).
+firmware-mod-kit - Firmware analysis and unpacking kit (active, yay).
+firmware-nexmon - Nexmon firmware for Wi-Fi chips ((hardware-specific), active, build from source).
+florence - On-screen virtual keyboard (optional, pacman; accessibility).
+fontconfig - Font configuration utility (active, pacman).
+foremost - File recovery by header/footer (active, pacman).
+fragroute - Intercept and modify outbound packets (active, build from source).
+fragrouter - Fragmentation routing tool (legacy, build from source).
+framework2 - Old Metasploit framework 2.x (legacy, build from source).
+freeipmi - IPMI management tools (active, pacman).
+freeradius-wpe - FreeRADIUS with EAP/WPE patches for credential capture (active, build from source).
+freerdp - RDP client/server tools (active, pacman).
+fruitywifi - Modular wireless network attack platform (active, build from source).
+fruitywifi-module-3g-4g - FruityWiFi 3G/4G module ((optional), build from source).
+fruitywifi-module-ap - FruityWiFi AP module ((optional), build from source).
+fruitywifi-module-api - FruityWiFi API module ((optional), build from source).
+fruitywifi-module-automaton - FruityWiFi automation module ((optional), build from source).
+fruitywifi-module-autossh - FruityWiFi AutoSSH module ((optional), build from source).
+fruitywifi-module-autostart - FruityWiFi autostart module ((optional), build from source).
+fruitywifi-module-bdfproxy - FruityWiFi BDFProxy integration ((optional), build from source).
+fruitywifi-module-beef - FruityWiFi BeEF integration ((optional), build from source).
+fruitywifi-module-bettercap - FruityWiFi Bettercap integration ((optional), build from source).
+fruitywifi-module-captive - FruityWiFi captive portal module ((optional), build from source).
+fruitywifi-module-detectdeauth - FruityWiFi deauth detection ((optional), build from source).
+fruitywifi-module-detectrogue - FruityWiFi rogue AP detection ((optional), build from source).
+fruitywifi-module-devicefinder - FruityWiFi device finder ((optional), build from source).
+fruitywifi-module-dnsspoof - FruityWiFi DNS spoof module ((optional), build from source).
+fruitywifi-module-ettercap - FruityWiFi Ettercap integration ((optional), build from source).
+fruitywifi-module-fruitydns - FruityWiFi DNS module ((optional), build from source).
+fruitywifi-module-fruityproxy - FruityWiFi proxy module ((optional), build from source).
+fruitywifi-module-hopper - FruityWiFi Hopper module ((optional), build from source).
+fruitywifi-module-karma - FruityWiFi Karma module ((optional), build from source).
+fruitywifi-module-kismet - FruityWiFi Kismet integration ((optional), build from source).
+fruitywifi-module-mana - FruityWiFi Mana toolkit integration ((optional), build from source).
+fruitywifi-module-mdk3 - FruityWiFi MDK3 integration ((optional), build from source).
+fruitywifi-module-metasploit - FruityWiFi Metasploit integration ((optional), build from source).
+fruitywifi-module-meterpreter - FruityWiFi Meterpreter integration ((optional), build from source).
+fruitywifi-module-nessus - FruityWiFi Nessus integration ((optional), build from source).
+fruitywifi-module-nginx - FruityWiFi nginx module ((optional), build from source).
+fruitywifi-module-ngrep - FruityWiFi ngrep integration ((optional), build from source).
+fruitywifi-module-nmap - FruityWiFi Nmap integration ((optional), build from source).
+fruitywifi-module-nmcli - FruityWiFi nmcli integration ((optional), build from source).
+fruitywifi-module-openvpn - FruityWiFi OpenVPN integration ((optional), build from source).
+fruitywifi-module-phishing - FruityWiFi phishing module ((optional), build from source).
+fruitywifi-module-recon - FruityWiFi recon module ((optional), build from source).
+fruitywifi-module-responder - FruityWiFi Responder integration ((optional), build from source).
+fruitywifi-module-rpitwit - FruityWiFi Raspberry Pi Twitter module ((optional), build from source).
+fruitywifi-module-squid3 - FruityWiFi Squid proxy integration ((optional), build from source).
+fruitywifi-module-sshuttle - FruityWiFi SSHuttle integration ((optional), build from source).
+fruitywifi-module-sslstrip - FruityWiFi SSLstrip integration ((optional), build from source).
+fruitywifi-module-sslstrip2 - FruityWiFi SSLstrip2 integration ((optional), build from source).
+fruitywifi-module-stalker - FruityWiFi stalker module ((optional), build from source).
+fruitywifi-module-supplicant - FruityWiFi supplicant module ((optional), build from source).
+fruitywifi-module-tapper - FruityWiFi Tapper module ((optional), build from source).
+fruitywifi-module-tcpdump - FruityWiFi tcpdump integration ((optional), build from source).
+fruitywifi-module-tor - FruityWiFi Tor integration ((optional), build from source).
+fruitywifi-module-urlsnarf - FruityWiFi urlsnarf integration ((optional), build from source).
+fruitywifi-module-vfeed - FruityWiFi vFeed integration ((optional), build from source).
+fruitywifi-module-whatsapp - FruityWiFi WhatsApp module ((optional), build from source).
+fruitywifi-module-wifirecon - FruityWiFi Wi-Fi recon module ((optional), build from source).
+ftester - Firewall testing tool (active, build from source).
+fudgec2 - Minimal post-exploitation C2 (active, build from source).
+funkload - Web performance/load tester (optional, pipx install funkload).
+galleta - Extract info from Internet Explorer cookies (legacy, build from source).
+gdb-peda - PEDA (Python Exploit Development Assistance) for GDB (active, build from source).
+getallurls - Fetch known URLs for a domain from web archives/APIs (active, build from source).
+getsploit - Search & download exploits from exploit-db (active, yay).
+ghidra - NSA reverse engineering suite (active, pacman).
+ghost-phisher - Wireless & Ethernet phishing attack tool (legacy, build from source).
+giskismet - Visualize Kismet data in Google Earth (legacy, build from source).
+gitleaks - Git repo secret scanner (active, pacman).
+gitxray - Inspect git commits for metadata/secrets (active, build from source).
+globre - Regex/glob matching utility (active, pipx install globre).
+gnuradio - SDR DSP toolkit (active, pacman).
+gobuster - Directory/DNS brute forcer (active, pacman).
+godoh - DNS over HTTPS covert channel (active, build from source).
+golismero - Web security testing framework (legacy, build from source).
+goofile - Search for specific filetypes in Google (legacy, build from source).
+google-nexus-tools - Flash/unlock Nexus devices ((hardware-specific), active, build from source).
+gophish - Phishing framework (active, yay).
+goshs - Simple HTTP file server (active, build from source).
+gospider - Web spider/crawler (active, build from source).
+gowitness - Web screenshot utility (active, yay).
+gpp-decrypt - Decrypt GPP stored passwords (active, build from source).
+gqrx - SDR receiver (active, pacman).
+grabber - Web application vulnerability scanner (legacy, build from source).
+greenbone-security-assistant - OpenVAS web UI (active, yay).
+gtkhash - Checksum/hash utility (active, yay).
+guymager - Forensic disk imaging tool (active, yay).
+gvm - Greenbone Vulnerability Management framework (active, build from source or yay).
+h8mail - Email OSINT & breach lookup (active, pipx install h8mail).
+hackersh - Interactive pentest shell wrapper (legacy, build from source).
+hackrf - SDR transceiver hardware tools (active, pacman).
+hak5-wifi-coconut - Hak5 Coconut Wi-Fi adapter tools ((hardware-specific), active, build from source).
+hakrawler - Fast web crawler (active, build from source).
+hamster-sidejack - HTTP session sidejacking tool (legacy, yay).
+hashcat - GPU password cracker (active, pacman).
+hashcat-utils - Utilities for hashcat (active, pacman).
+hashid - Identify hash types (active, yay).
+hash-identifier - Identify hash types (active, yay).
+havoc - Red team C2 framework (active, yay).
+hb-honeypot - Simple honeypot (active, build from source).
+hcxdumptool - Capture Wi-Fi handshakes (active, pacman).
+hcxtools - Wi-Fi handshake processing toolkit (active, pacman).
+heartbeat-scanner - Heartbeat network scanner (legacy, build from source).
+heartleech - Extract SSL keys from memory (legacy, build from source).
+hekatomb - Mass subdomain takeover scanner (active, build from source).
+hexinject - Packet injection/sniffing tool (active, yay).
+hexorbase - Database management tool for pentesters (legacy, build from source).
+hoaxshell - Reverse shell generator/listener (active, build from source).
+hostapd-mana - Hostapd fork with EvilAP features (active, build from source).
+hostapd-wpe - Hostapd with WPA Enterprise credential capture (active, yay).
+hosthunter - Identify hosts from screenshots/banners (active, build from source).
+hostsman - Manage local hosts file (legacy, build from source).
+hotpatch - Runtime binary patching (active, build from source).
+hping3 - TCP/IP packet crafter (active, yay).
+htshells - Reverse shell payload collection (active, build from source).
+httprint - Web server fingerprinting (active, yay).
+httprobe - Check for live hosts from list (active, yay).
+http-tunnel - HTTP tunneling client/server (legacy, build from source).
+httptunnel - Tunnel data over HTTP (active, pacman).
+httpx-toolkit - Fast HTTP probing toolkit (active, build from source).
+hubble - Kubernetes security observability (optional, active, build from source).
+humble - Subdomain takeover scanner (active, build from source).
+hurl - HTTP(S) requests from terminal (active, pacman).
+hydra - Login brute forcer (active, pacman).
+hyperion - Windows PE runtime crypter (legacy, build from source).
+iaxflood - IAX VoIP DoS tool (legacy, build from source).
+ibombshell - PowerShell-based post-exploitation framework (active, build from source).
+idb - iOS app pentest tool (legacy, build from source).
+ident-user-enum - Identify users via ident protocol (legacy, build from source).
+ieee-data - IEEE OUI MAC vendor list (active, build from source).
+ikat - Windows exploitation framework (legacy, build from source).
+imhex - Hex editor (active, yay).
+imhex-patterns - Pattern library for ImHex (active, yay).
+impacket - Python SMB/RPC protocol toolkit (active, pacman).
+impacket-scripts - Impacket example scripts (active, pacman).
+inetsim - Network service simulation (active, yay).
+inguma - Network pentest framework (legacy, build from source).
+inspy - LinkedIn-based username enumeration (active, pipx install inspy).
+instaloader - Download Instagram photos/posts (optional, yay).
+intersect - Post-exploitation data exfil tool (legacy, build from source).
+intrace - Traceroute with application layer info (active, build from source).
+inundator - IDS alert flooder (legacy, build from source).
+inviteflood - SIP INVITE DoS tool (legacy, build from source).
+iphone-backup-analyzer - Analyze iTunes backups (legacy, build from source).
+ipv6-toolkit - IPv6 attack toolkit (active, pacman).
+irpas - IRPAS protocol attack suite (legacy, build from source).
+ismtp - SMTP testing tool (legacy, build from source).
+isr-evilgrade - Malicious update injection framework (legacy, build from source).
+ivre - Network recon framework (active, yay).
+iw - Wi-Fi interface configuration tool (active, pacman).
+jad - Java decompiler (active, pacman).
+jadx - Android APK decompiler (active, pacman).
+javasnoop - Java API interceptor (legacy, build from source).
+jboss-autopwn - JBoss exploitation tool (legacy, build from source).
+jd-gui - Java decompiler GUI (active, yay).
+jefferson - JFFS2 filesystem extraction tool (active, yay).
+jigsaw - Jigsaw breach data search (active, build from source).
+john - John the Ripper password cracker (active, pacman).
+johnny - GUI for John the Ripper (active, yay).
+joomscan - Joomla vulnerability scanner (active, yay).
+js2py - Run JavaScript in Python (delete, library; if used for payloads, pipx).
+jsp-file-browser - Web shell file browser (legacy, build from source).
+jsql - SQL injection tool (active, build from source).
+juice-shop - OWASP vulnerable web app ((lab-only), active, build from source).
+kalibrate-rtl - RTL-SDR GSM base station scanner (active, yay).
+keepnote - Note-taking app for pentest engagements (active, yay).
+keimpx - SMB login brute/valid credential checker (active, build from source).
+kerberoast - Kerberos ticket extraction/cracking (active, build from source).
+keystone-engine - Assembler engine (active, build from source; RE/deps).
+killerbee - IEEE 802.15.4/ZigBee attack toolkit (active, build from source).
+king-phisher - Phishing campaign toolkit (active, build from source).
+kismet - Wireless network detector/sniffer (active, pacman).
+koadic - Windows JScript RAT (active, build from source).
+krbrelayx - Kerberos relay attack toolkit (active, build from source).
+kubernetes-helm - Helm package manager for Kubernetes (active, pacman).
+kustomize - Kubernetes resource customization (active, pacman).
+lapsdumper - Dump LAPS passwords from AD (active, build from source).
+laudanum - Webshell/attack payload collection (active, build from source).
+lbd - Load Balancer Detector (active, yay).
+ldeep - LDAP enumeration & extraction tool (active, build from source).
+legion - Network recon GUI (active, build from source).
+ligolo-mp - TCP/UDP tunneling tool (active, build from source).
+ligolo-ng - Reverse tunneling tool (active, build from source).
+linkedin2username - Generate usernames from LinkedIn profiles (active, pipx install linkedin2username).
+linux-exploit-suggester - Local Linux kernel exploit suggester (active, build from source).
+lynis - Security auditing tool (active, pacman).
+maltego - Link analysis/OSINT tool (active, yay).
+maltegoce - Maltego Community Edition (active, yay).
+maltego-teeth - Maltego transforms (active, yay).
+mana-toolkit - Rogue AP/MITM Wi-Fi toolkit (active, build from source).
+manuf - MAC address manufacturer lookup (active, build from source).
+maryam - OSINT framework (active, build from source).
+maskprocessor - Wordlist generator (active, yay).
+masky - ADCS relay + abuse tool (active, build from source).
+masscan - High-speed port scanner (active, pacman).
+massdns - Mass DNS resolution tool (active, yay).
+md2pdf - Convert Markdown to PDF (optional, pipx install md2pdf).
+mdk3 - Wi-Fi stress testing toolkit (legacy, yay).
+mdk4 - Wi-Fi attack toolkit (active, pacman).
+medusa - Login brute forcer (active, pacman).
+merlin - Cross-platform C2 framework (active, yay).
+metagoofil - Public document metadata harvester (active, build from source).
+metasploit - Metasploit Framework (active, pacman).
+mfcuk - MIFARE Classic cracking tool (active, yay).
+mfoc - MIFARE Classic offline cracker (active, pacman).
+mfterm - MIFARE Classic terminal tool (active, build from source).
+mimikatz - Windows credential dumper (active, build from source).
+miranda - XMPP/Jabber pentest tool (active, yay).
+mitm6 - IPv6 MITM attacks (active, build from source).
+mitmf - Man-in-the-Middle Framework (legacy, build from source).
+mitmproxy - Interactive HTTPS proxy (active, pacman).
+mitmproxy-rs - Rust-based MITM proxy variant (active, build from source).
+mitmproxy-wireguard - WireGuard traffic interception tool (active, build from source).
+msfpc - MSFvenom payload creator (active, build from source).
+msldap - LDAP exploitation library/tool (active, pipx install msldap).
+mssqlpwner - MSSQL post-exploitation tool (active, build from source).
+multiforcer - Multi-protocol password brute forcer (legacy, build from source).
+multimon-ng - Radio signal decoder (active, pacman).
+mxcheck - Email MX record checker (active, build from source).
+naabu - Fast port scanner (active, yay).
+naked - Python module obfuscation removal (active, build from source).
+name-that-hash - Hash type identifier (active, pipx install name-that-hash).
+nassl - SSL/TLS scanning library/CLI (active, build from source).
+nbtscan-unixwiz - NetBIOS network scanner (active, build from source).
+ncat-w32 - Windows netcat binary (active, build from source).
+ncrack - Network auth brute forcer (active, pacman).
+ndpi - Deep Packet Inspection toolkit (active, yay).
+neo4j - Graph database (active, yay; used by BloodHound).
+netexec - AD network exploitation tool (active, yay).
+netscanner - Simple network scanner (active, pacman).
+nextnet - Reverse DNS + network mapping (active, build from source).
+nfspy - NFS protocol manipulation tool (active, build from source).
+nikto - Web server vulnerability scanner (active, pacman).
+nikto - Web server vulnerability scanner (active, pacman).
+nipper-ng - Router/firewall configuration auditor (active, build from source).
+nishang - PowerShell offensive toolkit (active, build from source).
+nmap - Network scanner (active, pacman).
+nomachine-* - NoMachine remote desktop clients ((optional), active, build from source).
+ntop - Network traffic probe (active, yay).
+ntopng - Web-based network traffic monitor (active, yay).
+nuclei - Vulnerability scanner (active, yay).
+obsidian - Markdown note-taking app (active, pacman).
+oclgausscrack - MySQL password cracker using GPU (legacy, build from source).
+oclhashcat / oclhashcat-lite / oclhashcat-plus - GPU password crackers (legacy, build from source; superseded by hashcat).
+odat - Oracle database attack tool (active, build from source).
+ohrwurm - Audio capture/analysis tool (legacy, build from source).
+ollydbg - Windows debugger (active, build from source).
+openssl - SSL/TLS toolkit (active, pacman).
+opentaxii - TAXII server implementation (optional, build from source).
+openvas-cli - CLI for OpenVAS/Greenbone (active, yay).
+openvas-scanner - Greenbone/OpenVAS scanner (active, yay).
+open-vm-tools - VMware guest tools (optional, pacman).
+o-saft - SSL audit tool (active, build from source).
+oscanner - Oracle DB scanner (active, build from source).
+osrframework - OSINT framework (active, build from source).
+owasp-mantra-ff - Firefox pentest browser (legacy, build from source).
+owl - Binary analysis toolkit (active, yay).
+p0f - Passive OS fingerprinting (active, pacman).
+pack / pack2 - Password wordlist generators (active, build from source).
+pacu - AWS exploitation framework (active, pipx install pacu).
+padbuster - Padding oracle attack tool (active, build from source).
+paros - Java-based web app proxy/scanner (legacy, yay).
+parsero - Robots.txt analysis tool (active, build from source).
+passdetective - Search for reused passwords in leaks (active, build from source).
+passing-the-hash - Pass-the-hash toolkit (active, build from source).
+patator - Multi-protocol brute force tool (active, yay).
+payloadsallthethings - Payload collection (active, git clone).
+pdfbook - PDF reordering/printing utility (active, build from source).
+pdfid - PDF malware analysis (active, build from source).
+pdf-parser - PDF parser for malware analysis (active, build from source).
+pdgmail - Gmail account brute-force script (legacy, build from source).
+peass-ng - Privilege escalation scripts (active, git clone).
+peepdf - PDF analysis tool (active, yay).
+peirates - Kubernetes post-exploitation tool (active, build from source).
+perl-cisco-copyconfig - Perl tool for Cisco config retrieval (legacy, build from source).
+phishery - Inject creds into Office templates (active, build from source).
+photon - Web crawler for OSINT (active, yay).
+phpggc - PHP gadget chain generator (active, build from source).
+phpsploit - Stealth post-exploitation framework in PHP (active, build from source).
+phrasendrescher - Password phrase generator (active, yay).
+pipal - Password analysis tool (active, build from source).
+pixiewps - Offline WPS PIN brute-forcer (active, pacman).
+pixz - Parallel xz compressor (active, pacman).
+pjproject - SIP stack (active, yay).
+plaso - Log2timeline DFIR framework (active, build from source).
+plecost - WordPress plugin scanner (active, build from source).
+polenum - Extract MS password policy from registry hives (active, yay).
+portspoof - Port spoofer to frustrate scanners (active, build from source).
+poshc2 - C2 framework in PowerShell (active, build from source).
+powercat - PowerShell reimplementation of netcat (active, build from source).
+powerfuzzer - Web app fuzzer (active, build from source).
+powershell - Microsoft PowerShell (active, yay).
+powershell-empire - C2 framework (active, yay).
+powersploit - PowerShell post-exploitation scripts (active, build from source).
+proguard - Java code obfuscator (optional, yay).
+protos-sip - SIP protocol fuzzer (active, build from source).
+proxify - HTTP(S) proxy for intercept/modify (active, yay).
+proxmark3 - RFID/NFC tool (active, pacman).
+proxychains - Proxy forwarding tool (active, pacman).
+proxystrike - Web app scanner (legacy, build from source).
+pskracker - PSK generator for WPA/WPA2 (active, build from source).
+pspy - Process snooping tool (active, yay).
+pwnat - NAT bypass tunneling (active, yay).
+pwncat - Post-exploitation tool (active, yay).
+py2neo - Neo4j Python client (active, pipx install py2neo; needed for BloodHound scripts).
+pyexploitdb - ExploitDB Python client (active, pipx install pyexploitdb).
+pyfatfs - FAT filesystem parser (active, pipx install pyfatfs).
+pygexf - Create/read GEXF graph files (active, pipx install pygexf).
+pyguacamole - Apache Guacamole client lib/CLI (active, pipx install pyguacamole).
+pyinstaller - Package Python apps (active, yay).
+pyinstxtractor - Extract files from PyInstaller executables (active, pipx install pyinstxtractor).
+pylibemu - Shellcode emulation library/tool (active, build from source).
+pylnk - Parse Windows LNK shortcut files (active, pipx install pylnk).
+pymavlink - MAVLink protocol lib (active, pipx install pymavlink; optional drone tooling).
+pymetasploit3 - Metasploit RPC client (active, pipx install pymetasploit3).
+pyminifier - Python code minifier/obfuscator (active, pipx install pyminifier).
+pymisp - MISP API Python client (active, pipx install pymisp).
+pynfsclient - NFS client in Python (active, pipx install pynfsclient).
+pynput - Keyboard/mouse automation (active, pipx install pynput; optional).
+pypykatz - Python Mimikatz parser (active, pipx install pypykatz).
+pyrit - WPA/WPA2 cracking (active, yay).
+pyrit-opencl - OpenCL acceleration for Pyrit (active, yay).
+pyshodan - Shodan API client (active, pipx install pyshodan).
+pysigma - Sigma rule CLI (active, pipx install pysigma).
+pysmb - SMB client/server lib/CLI (active, pipx install pysmb).
+pytesseract - OCR via Tesseract (active, pipx install pytesseract).
+pytsk - SleuthKit bindings (active, pipx install pytsk).
+pyusb - USB access from Python (active, pipx install pyusb; hardware optional).
+pyvnc - VNC client/server in Python (active, yay).
+pywebcopy - Website copier (active, pipx install pywebcopy).
+pywerview - Windows network enumeration (active, pipx install pywerview).
+pywhat - Identify what a string is (active, pipx install pywhat).
+pywinrm - Windows Remote Management client (active, pipx install pywinrm).
+qemu - Machine emulator/virtualizer (optional, pacman).
+qsslcaudit - SSL/TLS cipher suite audit tool (active, build from source).
+quark-engine - Android malware analysis engine (active, yay).
+radare2 - Reverse engineering framework (active, pacman).
+rainbowcrack - Precomputed hash cracker (active, yay).
+raven - Raven Security testing framework (active, build from source).
+rcracki-mt - Multi-threaded Rainbow Table cracker (active, build from source).
+rdesktop - RDP client (active, pacman).
+reaver - WPS brute force attack tool (active, pacman).
+rebind - DNS rebinding attack framework (active, build from source).
+recon-ng - Web recon framework (active, yay).
+reconspider - OSINT automation tool (active, build from source).
+recstudio - Reverse engineering IDE for Java/Android (active, yay).
+redeye - Red team engagement tracking tool (active, build from source).
+redfang - Bluetooth device discovery by brute force (active, build from source).
+redsnarf - Windows credential gathering tool (active, build from source).
+reglookup - Windows registry analysis tool (active, yay).
+regripper - Windows registry extraction & reporting (active, build from source).
+responder - LLMNR/NBT-NS/mDNS poisoner (active, yay).
+rev-proxy-grapher - Reverse proxy traffic visualization tool (active, build from source).
+rfcat - Sub-1GHz RF transceiver tool (active, build from source).
+rfidiot - RFID/NFC hacking toolkit (active, build from source).
+ridenum - RID user enumeration tool (active, build from source).
+rizin - Reverse engineering framework (active, pacman).
+rizin-cutter - GUI for Rizin (active, yay).
+rling - Wordlist manipulation tool (active, build from source).
+robotstxt - robots.txt parser/checker (active, yay).
+ropper - ROP gadget finder (active, pacman).
+routerkeygenpc - WPA key generator for default router keys (active, build from source).
+routersploit - Router exploitation framework (active, pacman).
+rsh-redone - Reimplementation of rsh/rlogin/rshd (active, build from source).
+rsmangler - Wordlist generator (active, build from source).
+rtl-sdr - SDR receiver (active, pacman).
+rtlsdr-scanner - Spectrum scanning for RTL-SDR (active, build from source).
+rtpbreak - Extract media streams from RTP packets (active, build from source).
+rtpflood - RTP flood tool (active, build from source).
+rtpinsertsound - Inject audio into RTP streams (active, build from source).
+rtpmixsound - Mix audio into RTP streams (active, build from source).
+rubeus - Kerberos abuse toolkit (active, build from source).
+rz-ghidra - Ghidra plugin for Rizin (active, yay).
+rzpipe - Python binding for Rizin (active, pipx install rzpipe).
+s3scanner - Find open Amazon S3 buckets (active, build from source).
+sakis3g - 3G mobile broadband connection script ((optional), build from source).
+samba - SMB/CIFS server & client (active, pacman).
+sandi - Android forensic data extraction tool (active, build from source).
+sara - Security Auditing tool for Linux (legacy, build from source).
+sbd - Encrypted netcat clone (active, yay).
+scapy - Packet manipulation framework (active, pacman).
+sctpscan - SCTP network scanner (active, build from source).
+seclists - Security testing wordlists (active, yay).
+secure-socket-funneling - Reverse tunneling tool (active, build from source).
+sentrypeer - SIP/VoIP intrusion prevention (active, build from source).
+set - Social Engineering Toolkit (active, build from source).
+sfuzz - Simple fuzzing tool (active, build from source).
+sharphound - Data collector for BloodHound (active, build from source).
+sharpshooter - Payload delivery framework (active, build from source).
+shellfire - Shell injection payload generator (active, build from source).
+shellnoob - Shellcode writing toolkit (active, yay).
+shellter - Windows executable injector (active, yay).
+sherlock - Username finder across social networks (active, build from source).
+sickle-tool - Web app fuzzing tool (active, build from source).
+sidguesser - SID brute-forcing for Oracle DBs (active, build from source).
+sigma-cli - Sigma rule converter CLI (active, pipx install sigma-cli).
+silenttrinity - Cross-platform C2 framework (active, build from source).
+siparmyknife - SIP testing tool (active, build from source).
+sipp - SIP traffic generator (active, yay).
+sippts - SIP penetration testing suite (active, build from source).
+sipvicious - SIP/VoIP scanning toolkit (active, yay).
+skipfish - Web application scanner (active, yay).
+sleuthkit - Forensic analysis toolkit (active, pacman).
+sliver - Cross-platform implant framework (active, yay).
+slowhttptest - Slow HTTP DoS testing (active, pacman).
+smali - Android assembler/disassembler (active, pacman).
+smbmap - SMB share enumeration tool (active, yay).
+smtp-user-enum - SMTP user enumeration tool (active, build from source).
+sn0int - Semi-automatic OSINT framework (active, pacman).
+sniffjoke - Anti-sniffing tool (active, build from source).
+snmpcheck - SNMP information enumerator (active, build from source).
+snmpenum - SNMP enumeration tool (active, build from source).
+snort - Network IDS/IPS (active, yay).
+sparrow-wifi - Wi-Fi analysis tool (active, build from source).
+sparta - Network infrastructure scanner GUI (active, yay).
+spiderfoot - OSINT automation tool (active, yay).
+spike - Protocol fuzzing framework (active, pacman).
+spooftooph - Bluetooth spoofing tool (active, yay).
+spray - Credential spraying tool (active, build from source).
+sprayhound - Credential spraying for BloodHound targets (active, build from source).
+sprayingtoolkit - Modular credential spraying toolkit (active, build from source).
+spraykatz - LSASS dumping tool (active, build from source).
+sqlmap - SQL injection tool (active, pacman).
+sqlmc - SQL multi-client CLI (active, build from source).
+sqlninja - SQL Server exploitation tool (active, build from source).
+sqlsus - MySQL injection & takeover tool (active, build from source).
+sqsh - SQL shell for Sybase/MS SQL (active, yay).
+ssdeep - Context-triggered piecewise hashing (active, pacman).
+sslcaudit - SSL/TLS security auditing (active, build from source).
+sslscan - SSL/TLS scanner (active, pacman).
+sslsplit - Transparent SSL proxy (active, pacman).
+sslstrip - SSL stripping attack tool (active, build from source).
+sslyze - SSL/TLS configuration scanner (active, yay).
+starkiller - Empire C2 GUI (active, yay).
+statsprocessor - Wordlist combinator (active, yay).
+subfinder - Subdomain enumeration (active, yay).
+subjack - Subdomain takeover tool (active, build from source).
+sublist3r - Subdomain enumeration (active, build from source).
+syft - SBOM generation tool (active, pacman).
+t50 - Stress testing tool for networks (active, yay).
+teamsploit - Team-oriented exploit framework (active, build from source).
+termineter - Smart meter penetration testing framework (active, build from source).
+terraform - Infrastructure-as-code tool (active, pacman).
+tetragon - Kubernetes security observability (active, build from source).
+tftpd32 - TFTP server (active, build from source).
+thc-ipv6 - IPv6 attack toolkit (active, pacman).
+thc-pptp-bruter - PPTP VPN brute forcer (active, build from source).
+thc-ssl-dos - SSL DoS testing tool (active, yay).
+theharvester - Email/domain/host OSINT (active, build from source).
+thehive - Incident response platform (optional, build from source).
+tinfoleak - Twitter OSINT tool (active, build from source).
+tinja - Injection framework (active, build from source).
+tlssled - TLS/SSL security auditing tool (active, build from source).
+tnscmd10g - Oracle DB command-line tool (active, yay).
+torrequest - Python Tor wrapper CLI (active, pipx install torrequest).
+trivy - Vulnerability/misconfig scanning tool (active, pacman).
+truecrack - TrueCrypt volume password cracker (active, build from source).
+trufflehog - Git secret scanner (active, yay).
+trufflehogregexes - Additional regex patterns for TruffleHog (active, build from source).
+twofi - Twitter-based wordlist generator (active, build from source).
+ubertooth - Bluetooth monitoring tool (active, yay).
+ubi-reader - UBIFS filesystem extraction tool (active, build from source).
+uhd - USRP hardware driver & tools (active, build from source).
+uhd-images - FPGA images for USRP (active, build from source).
+unblob - Firmware extraction tool (active, build from source).
+unblob-native - Native components for unblob (active, build from source).
+unicorn-magic - Unicorn CPU emulator wrapper CLI (active, build from source).
+unicornscan - Asynchronous port scanner (active, yay).
+unicrypto - Python cryptography wrapper (active, pipx install unicrypto).
+uniscan - Web vulnerability scanner (active, build from source).
+unix-privesc-check - Local Unix privilege escalation checker (active, yay).
+unsafeopenssl - OpenSSL with known vuln versions (lab-only, build from source).
+urlcrazy - Domain typo generator (active, yay).
+valgrind - Debugging/profiling tool (active, pacman).
+vboot-utils - Verified Boot utilities (active, yay).
+vega - Web app scanner (active, yay).
+veil - Payload generation framework (active, build from source).
+villain - Cross-platform C2 framework (active, build from source).
+virtualbox - Virtualization platform (active, pacman).
+vlc - Media player (optional, pacman).
+voiphopper - VLAN hopping over VoIP (active, build from source).
+volatility - Memory forensics framework (active, yay).
+vopono - VPN connection sandboxing (active, yay).
+vulners - Vulnerability database CLI (active, pipx install vulners).
+w3af - Web app attack & audit framework (active, build from source).
+wafw00f - WAF detection tool (active, yay).
+wapiti - Web vulnerability scanner (active, yay).
+watobo - Web app security testing (active, build from source).
+waybackpy - Wayback Machine scraping (active, pipx install waybackpy).
+wce - Windows Credential Editor (active, build from source).
+webacoo - Web backdoor generator (active, build from source).
+webscarab - Web app proxy/analyzer (active, build from source).
+webshag - Web app vulnerability scanner (active, build from source).
+webslayer - Web brute forcing tool (active, build from source).
+websploit - Web exploitation framework (active, yay).
+weevely - PHP webshell generator (active, yay).
+wfuzz - Web fuzzer (active, yay).
+whatmask - Convert netmask to CIDR (active, yay).
+wifi-honey - Fake AP honeypot (active, build from source).
+wifiphisher - Rogue AP phishing framework (active, build from source).
+wifipumpkin3 - Rogue AP framework (active, build from source).
+wifitap - Inject packets into Wi-Fi networks (active, build from source).
+wifite - Wi-Fi audit automation (active, pacman).
+wig - Web app fingerprinting (active, yay).
+wig-ng - Updated wig fork (active, build from source).
+winacl - Windows ACL manipulation tool (active, build from source).
+windows-privesc-check - Windows privilege escalation checker (active, build from source).
+wine - Windows compatibility layer (optional, pacman).
+winexe - Remote Windows command execution (active, build from source).
+wireshark - Network protocol analyzer (active, pacman).
+witnessme - Web screenshot utility (active, build from source).
+wkhtmltopdf - HTML to PDF converter (active, yay).
+wol-e - Wake-on-LAN exploitation tool (active, build from source).
+wordlistraider - Wordlist analyzer/manipulator (active, build from source).
+wordlists - Wordlist collection (active, yay).
+wpa - WPA handshake capture tools (active, build from source).
+wpa-sycophant - Rogue AP WPA client tool (active, build from source).
+wpscan - WordPress vulnerability scanner (active, pacman).
+writehat - Pentest report generator (active, build from source).
+xplico - Network forensics analysis (active, yay).
+xspy - X11 keystroke sniffer (active, build from source).
+xsrfprobe - CSRF vulnerability scanner (active, build from source).
+xsser - XSS scanner (active, build from source).
+yara - Pattern matching/malware rule engine (active, pacman).
+yersinia - Layer 2 attack framework (active, yay).
+zaproxy - OWASP ZAP web proxy/scanner (active, pacman).
+zeek - Network security monitoring (active, pacman).
+zenmap-kbx - Nmap GUI (active, yay).

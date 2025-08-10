@@ -1,3 +1,0 @@
-github.com/sensepost/godoh@latest
-github.com/bettercap/bettercap/v2@latest
-github.com/jaeles-project/gospider@latest
