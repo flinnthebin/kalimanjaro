@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# srctest: quick smoke tests for tools built by srcbuild
+
+set -Euo pipefail
+IFS=$'\n\t'
+
+DEBUG=0
+[[ "${1:-}" == "--debug" ]] && DEBUG=1
+
+pass(){ printf "\033[32m[OK]\033[0m %s\n" "$*"; }
+fail(){ printf "\033[31m[XX]\033[0m %s\n" "$*" >&2; }
+info(){ printf "\033[34m==>\033[0m %s\n" "$*"; }
+warn(){ printf "\033[33m[!]\033[0m %s\n" "$*"; }
+
+TOTAL=0
+FAILS=0
+
+run() {
+  if (( DEBUG )); then
+    "$@"
+  else
+    "$@" 2>&1
+  fi
+}
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# run_test <name> <cmd...> -- <regex to prove success>
+run_test() {
+  local name="$1"; shift
+  local cmd=() regex seen_sep=0
+  for x in "$@"; do
+    if [[ "$x" == "--" && $seen_sep -eq 0 ]]; then seen_sep=1; continue; fi
+    (( seen_sep == 0 )) && cmd+=("$x") || regex="$x"
+  done
+  (( TOTAL++ ))
+  info "Testing $name ..."
+  local out st
+  if have timeout; then
+    out="$(run timeout 10s "${cmd[@]}" || true)"
+    st=$?
+  else
+    out="$(run "${cmd[@]}" || true)"
+    st=$?
+  fi
+
+  if [[ "$out" =~ $regex ]]; then
+    pass "$name: output matched"
+    if (( DEBUG )); then printf '%s\n' "$out"; fi
+    return 0
+  else
+    (( FAILS++ ))
+    fail "$name: unexpected output/exit (status=$st)"
+    printf '%s\n%s\n%s\n' '---- output ----' "$out" '-----------------' >&2
+    return 1
+  fi
+}
+
+# --- Arkime checks ---
+arkime_check() {
+  (( TOTAL++ ))
+  info "Testing Arkime ..."
+  local ok=1
+
+  local ES_URL="${ES_URL:-}"
+  local ES_USER="${ES_USER:-admin}"
+  local ES_PASS="${ES_PASS:-admin}"
+  local VIEWER_URL="${VIEWER_URL:-http://localhost:8005}"
+  local ARK_UI_USER="${ARK_UI_USER:-admin}"
+  local ARK_UI_PASS="${ARK_UI_PASS:-changeme}"
+  local AUTH_MODE="${AUTH_MODE:-digest}"
+
+  if [[ -z "$ES_URL" ]]; then
+    if curl -s http://localhost:9200/_cat/health?h=status | grep -Eq 'green|yellow'; then
+      ES_URL="http://localhost:9200"
+    elif curl -k -s https://localhost:9200/_cat/health?h=status -u "$ES_USER:$ES_PASS" | grep -Eq 'green|yellow'; then
+      ES_URL="https://localhost:9200"
+    else
+      warn "OpenSearch not reachable on http or https"
+      ok=0
+    fi
+  fi
+
+  if ! systemctl is-active --quiet arkimecapture; then
+    warn "arkimecapture NOT active"; ok=0
+  fi
+  if ! systemctl is-active --quiet arkimeviewer; then
+    warn "arkimeviewer NOT active"; ok=0
+  fi
+
+  if [[ -n "${ES_URL:-}" ]]; then
+    if ! curl -k -s -u "$ES_USER:$ES_PASS" "$ES_URL/_cat/health?h=status" | grep -Eq 'green|yellow'; then
+      warn "OpenSearch health not green/yellow"; ok=0
+    fi
+  fi
+
+  if [[ "$AUTH_MODE" == "anonymous" ]]; then
+    curl -s "$VIEWER_URL/eshealth.json" | grep -q '{' || ok=0
+  else
+    curl -s --digest -u "$ARK_UI_USER:$ARK_UI_PASS" "$VIEWER_URL/eshealth.json" | grep -q '{' || ok=0
+  fi
+
+  if (( ok )); then
+    pass "Arkime (direct checks)"
+    return 0
+  else
+    (( FAILS++ ))
+    fail "Arkime checks failed"
+    return 1
+  fi
+}
+
+# --- Tests ---
+
+# 0trace
+if have 0trace; then
+  run_test "0trace" 0trace -- 'Usage: .*0trace iface target_ip'
+else
+  warn "0trace not found (skipping)"
+fi
+
+# amap
+if have amap; then
+  run_test "amap" amap -- 'amap v[0-9]+\.[0-9]+ .* by .*thc\.org|Syntax: amap'
+else
+  warn "amap not found (skipping)"
+fi
+
+# apache-users
+if have apache-users; then
+  run_test "apache-users" apache-users -- 'USAGE: .*apache\.(pl|py)|USAGE:'
+else
+  warn "apache-users not found (skipping)"
+fi
+
+# apktool
+if have apktool; then
+   run_test "apktool" apktool -- 'Apktool[[:space:]]+[0-9]+\.[0-9]+'
+ else
+  warn "apktool not found (skipping)"
+fi
+
+# apple_bleee wrappers
+if have ble-read-state; then
+  run_test "ble-read-state" ble-read-state -h -- 'usage: .*ble_read_state\.py|Apple bleee'
+else
+  warn "ble-read-state not found (skipping)"
+fi
+
+if have adv-wifi; then
+  run_test "adv-wifi" adv-wifi -h -- 'usage: .*adv_wifi\.py|usage:'
+else
+  warn "adv-wifi not found (skipping)"
+fi
+
+if have adv-airpods; then
+  run_test "adv-airpods" adv-airpods -h -- 'usage: .*adv_airpods\.py|usage:'
+else
+  warn "adv-airpods not found (skipping)"
+fi
+
+if have airdrop-leak; then
+  run_test "airdrop-leak" airdrop-leak -h -- 'usage: .*airdrop_leak\.py|usage:'
+else
+  warn "airdrop-leak not found (skipping)"
+fi
+
+# Arkime
+arkime_check || true
+
+echo
+if (( FAILS == 0 )); then
+  pass "All tests passed ($TOTAL/${TOTAL})"
+  exit 0
+else
+  fail "$FAILS test(s) failed ($((TOTAL-FAILS))/$TOTAL passed)"
+  exit 1
+fi
+
