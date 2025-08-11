@@ -12,8 +12,6 @@ android-sdk - Android tooling (reverse eng / mobile testing) (optional tool, act
 apache-users - Enumerate Apache user dirs (legacy, build from source).
 apktool - Android APK reverse-engineering (active, build from source).
 apple-bleee - Apple BLE research/exploit suite (active, build from source).
-apt2 - Automated penetration testing orchestrator (legacy, build from source).
-arachni - Web app scanner (Ruby; archived but still usable) (legacy, build from source; note: deprecated upstream).
 arjun - Parameter discovery for web endpoints (active, yay).
 arkime - Full-packet capture/indexing (formerly Moloch) (active, build from source / docker; heavy service).
 armitage - Metasploit GUI team-collab client (legacy, build from source).

@@ -219,11 +219,14 @@ install_amap() { # args: <src>
 }
 
 # ---- apache-users ----
-pkg_apache_users_deps() {
+pkg_apache-users_deps() {
   printf '%s\n' perl curl \
-                 perl-parallel-forkmanager \
-                 perl-libwww \
-                 perl-io-socket-ip
+                perl-parallel-forkmanager \
+                perl-libwww \
+                perl-lwp-protocol-https \
+                perl-io-socket-ip \
+                perl-io-socket-ssl \
+                perl-net-ssleay
   # optional: perl-io-all  (repo)  and perl-io-all-lwp (AUR)
 }
 
@@ -251,7 +254,7 @@ install_apache-users() { # args: <src>
 }
 
 # ---- apktool ----
-pkg_apktool_deps() { printf '%s\n' curl; }
+pkg_apktool_deps() { printf '%s\n' curl jre-openjdk; }
 
 fetch_apktool() { # args: <dst>
   local dst="$1"
@@ -291,8 +294,10 @@ install_apktool() { # args: <src>
 
 # ---- apple-bleee (+ owl) ----
 pkg_apple_bleee_deps() {
+  # openssl-1.1 supplies /usr/lib/libcrypto.so.1.1 for ctypescrypto
   printf '%s\n' git python python-pip base-devel cmake \
-                 libpcap libnl libev bluez bluez-libs python-pybluez
+                 libpcap libnl libev bluez bluez-libs python-pybluez \
+                 uv curl jq tar clang openssl-1.1
 }
 
 fetch_apple_bleee() { # args: <dst>
@@ -302,18 +307,12 @@ fetch_apple_bleee() { # args: <dst>
   mkdir -p "$dst"
   quiet_run git clone --depth=1 https://github.com/hexway/apple_bleee.git "$dst/apple_bleee"
   quiet_run git clone --depth=1 https://github.com/seemoo-lab/owl.git "$dst/owl"
-  # init submodules for owl
   ( cd "$dst/owl" && quiet_run git submodule update --init )
 }
 
 patch_apple_bleee_pyfixes() {
   local root="$1"
-  require_cmd find
-  require_cmd sed
-  require_cmd perl
-
-  # Fix "is"/"is not" when used with numeric or empty-string literals
-  #   (preserves 'is None' semantics)
+  require_cmd find sed perl
   while IFS= read -r -d '' f; do
     sed -i -E \
       -e 's/\bis[[:space:]]+not[[:space:]]+(-?[0-9]+)/!= \1/g' \
@@ -323,16 +322,15 @@ patch_apple_bleee_pyfixes() {
       "$f"
   done < <(find "$root/npyscreen" -type f -name '*.py' -print0 2>/dev/null || true)
 
-  # Make regex patterns raw if they contain backslashes:
-  #   re.compile("...<backslash>...") -> re.compile(r"...")
-  # (only touches the non-raw double-quoted form)
   find "$root" -type f -name '*.py' -print0 \
-    | xargs -0 perl -0777 -pi -e 's/re\.compile\("((?:[^"\\]|\\.)*\\(?:[^"\\]|\\.)*)"\)/"re.compile(r\"$1\")"/g'
+  | xargs -0 perl -0777 -pi -e 's/re\.compile\("((?:[^"\\]|\\.)*\\(?:[^"\\]|\\.)*)"\)/re.compile(r"$1")/g'
 }
 
 build_apple_bleee() { # args: <src>
+: "${APPLE_BLEEE_PBS_URL:=https://github.com/astral-sh/python-build-standalone/releases/download/20250808/cpython-3.10.18+20250808-x86_64-unknown-linux-gnu-install_only.tar.gz
+}" 
   local src="$1"
-
+  
   log "[apple-bleee] building owl (AWDL)"
   (
     cd "$src/owl"
@@ -347,7 +345,13 @@ build_apple_bleee() { # args: <src>
   log "[apple-bleee] preparing Python env"
   local share_dir="/usr/local/share/apple-bleee"
   local venv="$share_dir/.venv"
+  local uv_venv="$share_dir/.uv-venv"
   local req_fixed="$src/apple_bleee/requirements.fixed.txt"
+
+  # PBS CPython 3.10 for a clean, pinned runtime
+  local pbs_root="/opt/pbs-py310"
+  local pbs_py="$pbs_root/bin/python3.10"
+  local pbs_url_override="${APPLE_BLEEE_PBS_URL:-}"
 
   # sanitize upstream requirements (pycrypto -> pycryptodome; drop pybluez since we use system)
   sed -E '
@@ -361,11 +365,17 @@ build_apple_bleee() { # args: <src>
   quiet_run with_sudo mkdir -p "$share_dir"
   quiet_run with_sudo cp -a "$src/apple_bleee/." "$share_dir/"
 
-  # --- NEW: patch legacy Python syntax to be Py3.13-happy ---
+  # source hygiene for modern Python
   log "[apple-bleee] patching legacy Python syntax"
   patch_apple_bleee_pyfixes "$share_dir"
+  find "$share_dir" -type f -name '*.py' -print0 \
+  | xargs -0 sed -i -E \
+      -e 's/\bis[[:space:]]+not[[:space:]]+(-?[0-9]+)/!= \1/g' \
+      -e 's/\bis[[:space:]]+(-?[0-9]+)/== \1/g' \
+      -e "s/\\bis[[:space:]]+not[[:space:]]+(''|\"\")/!= \\1/g" \
+      -e "s/\\bis[[:space:]]+(''|\"\")/== \\1/g"
 
-  # venv using system site-packages (for python-pybluez)
+  # standard venv for other tools
   quiet_run with_sudo python -m venv --system-site-packages "$venv"
   quiet_run with_sudo "$venv/bin/pip" install --upgrade pip wheel
   quiet_run with_sudo "$venv/bin/pip" install -r "$req_fixed" || {
@@ -376,34 +386,329 @@ build_apple_bleee() { # args: <src>
     done < <(sed -E 's/[[:space:]]+#.*$//' "$req_fixed")
   }
 
-  log "[apple-bleee] installing CLI wrappers (venv python)"
+  require_cmd curl
+  require_cmd jq
+  require_cmd tar
+  if ! command -v uv >/dev/null 2>&1; then
+    die "[apple-bleee] uv not found. Install it (e.g. 'sudo pacman -S uv')."
+  fi
+
+  # ---- Resolve latest PBS asset dynamically (mirror fallback) ----
+  _pbs_triplet() {
+    case "$(uname -m)" in
+      x86_64)  echo "x86_64-unknown-linux-gnu" ;;
+      aarch64) echo "aarch64-unknown-linux-gnu" ;;
+      *) die "[apple-bleee] unsupported arch: $(uname -m)";;
+    esac
+  } 
+  
+  _resolve_pbs_url() {
+    # 1) honor explicit override
+    [[ -n "$pbs_url_override" ]] && { echo "$pbs_url_override"; return 0; }
+
+    local trip="$(_pbs_triplet)"
+    local api_base="https://api.github.com/repos/astral-sh/python-build-standalone/releases"
+    # Try the latest first, then scan the last 20 releases just in case
+    for endpoint in "latest" "?per_page=20"; do
+      local urls
+      urls="$(curl -fsSL "${api_base}/${endpoint}" \
+        | jq -r --arg trip "$trip" '
+            ( .assets // [] )[]?.browser_download_url
+            // ( .[]? | .assets[]?.browser_download_url )
+            | select(test("^https://.*/cpython-3\\.10\\.[0-9]+\\+[0-9]+-" + $trip + "-install_only\\.tar\\.(gz|zst|xz)$"))
+          ' 2>/dev/null | sort -V | tail -n1)"
+      if [[ -n "$urls" ]]; then
+        echo "$urls"
+        return 0
+      fi
+    done
+    return 1
+  }
+
+  if [[ ! -x "$pbs_py" ]]; then
+    log "[apple-bleee] discovering PBS Python 3.10"
+    local pbs_url; pbs_url="$(_resolve_pbs_url)" || true
+    if [[ -z "$pbs_url" ]]; then
+      die "[apple-bleee] couldn't find a CPython 3.10 install_only asset. Set APPLE_BLEEE_PBS_URL to a known-good URL."
+    fi
+    log "[apple-bleee] fetching PBS Python -> $pbs_root"
+    quiet_run with_sudo mkdir -p "$pbs_root"
+    local tmp_tgz; tmp_tgz="$(mktemp)"
+    if ! quiet_run curl -fSLo "$tmp_tgz" "$pbs_url"; then
+      local mirror="${pbs_url/https:\/\/github.com\/astral-sh\/python-build-standalone\/releases\/download\//https:\/\/python-standalone.org\/mirror\/astral-sh\/python-build-standalone\/releases\/download\/}"
+      warn "[apple-bleee] GitHub download failed; trying mirror"
+      curl -fSLo "$tmp_tgz" "$mirror" || die "[apple-bleee] failed to download PBS Python from mirror"
+    fi
+    quiet_run with_sudo tar -axf "$tmp_tgz" -C "$pbs_root" --strip-components=1
+    rm -f "$tmp_tgz"
+    quiet_run with_sudo "$pbs_py" -V >/dev/null || die "[apple-bleee] PBS Python unpacked but not runnable"
+  fi
+
+  # uv venv for airdrop-leak
+  log "[apple-bleee] creating uv venv ($uv_venv) with PBS Python"
+  quiet_run uv venv "$uv_venv" --python "$pbs_py"
+
+  # Clean uv cache (in case a previous run polluted it)
+  rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/uv/builds-v0" 2>/dev/null || true
+
+  # build netifaces with HAVE_GETIFADDRS
+  CFLAGS="${CFLAGS:-} -DHAVE_GETIFADDRS=1" \
+    quiet_run uv pip install --python "$uv_venv/bin/python" --no-binary netifaces netifaces \
+    || die "[apple-bleee] uv pip install (netifaces) failed"
+
+  # deps for airdrop-leak (Pillow + ctypescrypto + older cryptography)
+  quiet_run uv pip install --python "$uv_venv/bin/python" \
+    beautifulsoup4 fleep libarchive-c Pillow prettytable pycryptodome requests "ctypescrypto==0.5" "cryptography<40" \
+    || die "[apple-bleee] uv pip install failed"
+
+  # wrapper helper
   _mk_wrapper() {
-    local name="$1" script="$2"
+    local name="$1" script="$2" py="$3" env_lines="${4:-}"
     with_sudo install -Dm755 /dev/stdin "/usr/local/bin/$name" <<EOF
 #!/usr/bin/env bash
-exec "$venv/bin/python" "$share_dir/$script" "\$@"
+set -euo pipefail
+${env_lines}
+exec "$py" "$share_dir/$script" "\$@"
 EOF
   }
-  quiet_run _mk_wrapper ble-read-state  "ble_read_state.py"
-  quiet_run _mk_wrapper airdrop-leak    "airdrop_leak.py"
-  quiet_run _mk_wrapper adv-wifi        "adv_wifi.py"
-  quiet_run _mk_wrapper adv-airpods     "adv_airpods.py"
 
-  log "[apple-bleee] installed wrappers + venv (patched Python sources)"
+  local py_std="$venv/bin/python"
+  local py_airdrop="$uv_venv/bin/python"
+
+  quiet_run _mk_wrapper ble-read-state  "ble_read_state.py" "$py_std"
+  quiet_run _mk_wrapper adv-wifi        "adv_wifi.py"       "$py_std"
+  quiet_run _mk_wrapper adv-airpods     "adv_airpods.py"    "$py_std"
+
+  # OpenSSL 1.1 only for airdrop-leak (process-scoped)
+  quiet_run _mk_wrapper airdrop-leak "airdrop_leak.py" "$py_airdrop" \
+'LIBCRYPTO11="/usr/lib/libcrypto.so.1.1"
+LIBSSL11="/usr/lib/libssl.so.1.1"
+if [[ ! -e "$LIBCRYPTO11" || ! -e "$LIBSSL11" ]]; then
+  echo "[airdrop-leak] OpenSSL 1.1 not found. Install openssl-1.1." >&2
+  exit 1
+fi
+export LD_PRELOAD="${LIBCRYPTO11}:${LIBSSL11}:${LD_PRELOAD:-}"
+export CTYPESCRYPTO_LIBCRYPTO="${LIBCRYPTO11}"'
 }
 
 install_apple_bleee() { # args: <src>
   log "[apple-bleee] install handled during build; skipping"
 }
+
+# ---- arkime ----
+# ---- helper opensearch ----
+pkg_opensearch_deps() {
+  # This avoids the provider prompt and keeps the footprint smaller than a full JDK.
+  printf '%s\n' jre21-openjdk-headless opensearch
+}
+
+fetch_opensearch() { :; }
+build_opensearch() { :; }
+
+install_opensearch() {
+  local heap="${OPENSEARCH_HEAP_GB:-4}"   # override: OPENSEARCH_HEAP_GB=12 ./srcbuild opensearch
+  # Ensure installed (pkg_* already did, but harmless to re-assert)
+  quiet_run with_sudo pacman -S --needed --noconfirm jre21-openjdk-headless opensearch >/dev/null 2>&1 || true
+
+  local jvm="/etc/opensearch/jvm.options"
+  if [[ -f "$jvm" ]]; then
+    with_sudo sed -i -E "s/^-Xms[0-9]+[mg]/-Xms${heap}g/; s/^-Xmx[0-9]+[mg]/-Xmx${heap}g/" "$jvm"
+  fi
+
+  quiet_run with_sudo systemctl enable --now opensearch
+
+  # Optional: wait for HTTP to come up before returning
+  local url="${ES_URL:-https://localhost:9200}" tries=30
+  while (( tries-- )); do
+    if curl -k -s -u "${ES_USER:-admin}:${ES_PASS:-admin}" "$url/_cat/health" >/dev/null; then
+      break
+    fi
+    sleep 1
+  done
+
+  log "[opensearch] enabled + started (heap=${heap}g)"
+}
+
+# ---- arkime (one-shot noninteractive) ----
+pkg_arkime_deps() { printf '%s\n' curl jq iproute2 ethtool libcap; }
+
+fetch_arkime() { # args: <dst>
+  local dst="$1"
+  require_cmd curl jq
+  log "[arkime] discovering latest stable release (GitHub)"
+  mkdir -p "$dst"
+
+  # Get latest release JSON and pick the Arch asset
+  local api="https://api.github.com/repos/arkime/arkime/releases/latest"
+  local url
+  url="$(curl -fsSL "$api" \
+       | jq -r '.assets[]?.browser_download_url | select(test("_arch-x86_64\\.pkg\\.tar\\.zst$"))' \
+       | head -n1)" || true
+  [[ -n "$url" ]] || die "[arkime] could not find Arch package in latest release"
+
+  log "[arkime] downloading $(basename "$url")"
+  quiet_run curl -fsSL "$url" -o "$dst/arkime.pkg.tar.zst"
+}
+
+build_arkime() { :; }
+# Env knobs (all optional; sensible defaults shown):
+: "${ARK_IFACE:=wlp4s0}"               # leave empty -> auto-detect first UP non-lo
+: "${ARK_ES_URL:=http://localhost:9200}"
+: "${ARK_ES_USER:=}"                   # ES username (omit for HTTP/no-auth)
+: "${ARK_ES_PASS:=}"                   # ES password (omit for HTTP/no-auth)
+: "${ARK_ILS:=ism}"                    # ism | ilm | none
+: "${ARK_UI_ADMIN:=admin}"             # Arkime UI username
+: "${ARK_UI_NAME:=Admin User}"         # Arkime UI full name
+: "${ARK_UI_PASS:=changeme}"           # Arkime UI password
+: "${ARK_VIEW_PORT:=8005}"             # Arkime viewer port
+: "${ARK_AUTH_MODE:=digest}"           # digest | basic | anonymous
+: "${ARK_DOWNLOAD_GEOIP:=no}"          # yes | no
+: "${ARK_FORCE_REWRITE_CFG:=1}"        # 1 = overwrite existing config.ini
+install_arkime() { # args: <src>
+  local src="$1"
+  local pkg="$src/arkime.pkg.tar.zst"
+  [[ -f "$pkg" ]] || die "[arkime] package not found"
+
+  log "[arkime] installing package"
+  quiet_run with_sudo pacman -U --noconfirm "$pkg"
+
+  # -------- Ensure service account exists (pkg should create it, but make idempotent) --------
+  with_sudo sh -c 'getent passwd arkime >/dev/null || useradd -r -d /opt/arkime -s /usr/bin/nologin arkime'
+
+  # -------- Defaults / env --------
+  local iface="${ARK_IFACE:-}"
+  if [[ -z "$iface" ]]; then
+    # Prefer first non-lo that's UP; otherwise first non-lo
+    iface="$(ip -br link 2>/dev/null | awk '$1!="lo" && $2 ~ /UP/ {print $1; exit}')"
+    [[ -z "$iface" ]] && iface="$(ip -br link 2>/dev/null | awk '$1!="lo"{print $1; exit}')"
+  else
+    # If provided iface doesn't exist, fall back to first UP non-lo
+    if ! ip -br link 2>/dev/null | awk -v want="$iface" '$1==want {found=1} END{exit found?0:1}'; then
+      warn "[arkime] interface '$iface' not found; auto-selecting an UP interface"
+      iface="$(ip -br link 2>/dev/null | awk '$1!="lo" && $2 ~ /UP/ {print $1; exit}')"
+      [[ -z "$iface" ]] && iface="$(ip -br link 2>/dev/null | awk '$1!="lo"{print $1; exit}')"
+    fi
+  fi
+
+  local es_url="${ARK_ES_URL:-http://localhost:9200}"
+  local es_user="${ARK_ES_USER:-}"
+  local es_pass="${ARK_ES_PASS:-}"
+  local ils="${ARK_ILS:-none}"
+  local ui_user="${ARK_UI_ADMIN:-admin}"
+  local ui_name="${ARK_UI_NAME:-Admin User}"
+  local ui_pass="${ARK_UI_PASS:-changeme}"
+  local view_port="${ARK_VIEW_PORT:-8005}"
+  local auth_mode="${ARK_AUTH_MODE:-digest}"
+  local want_geo="${ARK_DOWNLOAD_GEOIP:-no}"
+  local force_cfg="${ARK_FORCE_REWRITE_CFG:-0}"
+
+  # -------- Write config.ini non-interactively --------
+  local cfg="/opt/arkime/etc/config.ini"
+  if [[ ! -f "$cfg" || "$force_cfg" == "1" ]]; then
+    log "[arkime] writing $cfg (iface=$iface, es=$es_url, viewer=$view_port, authMode=$auth_mode)"
+    with_sudo install -d /opt/arkime/etc
+    with_sudo tee "$cfg" >/dev/null <<EOF
+[default]
+# Core
+interface = ${iface}
+opensearch = ${es_url}
+
+# UI / auth
+viewPort = ${view_port}
+authMode = ${auth_mode}
+
+# PCAP & misc sane defaults
+pcapDir = /opt/arkime/raw
+pcapWriteMethod = simple
+maxFileSizeG = 12
+maxESConns = 20
+dnsMemoryCache = true
+smtpIpHeader = Received, X-Forwarded-For
+
+# GeoIP (off by default unless you provision geoipupdate)
+# geoLite2Country = /usr/share/GeoIP/GeoLite2-Country.mmdb
+# geoLite2ASN     = /usr/share/GeoIP/GeoLite2-ASN.mmdb
+EOF
+  else
+    log "[arkime] using existing $cfg"
+    # Make sure opensearch URL & iface match env (idempotent patch)
+    with_sudo sed -i -E \
+      "s#^(opensearch|elasticsearch)\s*=.*#opensearch = ${es_url}#; \
+       s#^interface\s*=.*#interface = ${iface}#; \
+       s#^viewPort\s*=.*#viewPort = ${view_port}#; \
+       s#^authMode\s*=.*#authMode = ${auth_mode}#" "$cfg"
+  fi
+
+  # -------- Ensure runtime dirs + perms BEFORE starting services --------
+  with_sudo install -d /opt/arkime/raw /opt/arkime/logs
+  with_sudo chown -R arkime:arkime /opt/arkime/raw /opt/arkime/logs
+  # setcap should already be handled by pkg, but make sure:
+  quiet_run with_sudo setcap cap_net_raw,cap_net_admin+eip /opt/arkime/bin/capture || true
+
+  # -------- Initialize indices --------
+  if [[ "$ils" != "none" ]]; then
+    log "[arkime] initializing indices on ${es_url} with ${ils}"
+  else
+    log "[arkime] initializing indices on ${es_url}"
+  fi
+  if [[ -n "$es_user" || -n "$es_pass" ]]; then
+    case "$ils" in
+      ilm)  with_sudo /opt/arkime/db/db.pl --esuser "$es_user:$es_pass" "$es_url" init --ilm ;;
+      ism)  with_sudo /opt/arkime/db/db.pl --esuser "$es_user:$es_pass" "$es_url" init --ism ;;
+      *)    with_sudo /opt/arkime/db/db.pl --esuser "$es_user:$es_pass" "$es_url" init ;;
+    esac
+  else
+    case "$ils" in
+      ilm)  with_sudo /opt/arkime/db/db.pl "$es_url" init --ilm ;;
+      ism)  with_sudo /opt/arkime/db/db.pl "$es_url" init --ism ;;
+      *)    with_sudo /opt/arkime/db/db.pl "$es_url" init ;;
+    esac
+  fi
+
+  # -------- Optional GeoIP (off unless asked) --------
+  if [[ "$want_geo" == "yes" ]]; then
+    warn "[arkime] GeoIP download requires MaxMind setup; skipping automation here."
+  fi
+
+  # -------- Ensure an admin UI user exists --------
+  if [[ -n "$ui_user" && -n "$ui_pass" ]]; then
+    log "[arkime] ensuring UI admin user '$ui_user' exists"
+    with_sudo /opt/arkime/bin/arkime_add_user.sh "$ui_user" "$ui_name" "$ui_pass" --admin >/dev/null 2>&1 || true
+  fi
+
+  # -------- Enable & start services --------
+  log "[arkime] enabling services"
+  quiet_run with_sudo systemctl enable --now arkimecapture
+  quiet_run with_sudo systemctl enable --now arkimeviewer
+
+  # -------- Wait for viewer health --------
+  local vurl="http://localhost:${view_port}"
+  local tries=30
+  while (( tries-- )); do
+    if [[ "$auth_mode" == "anonymous" ]]; then
+      curl -s "$vurl/eshealth.json" | grep -q '{' && { log "[arkime] viewer healthy at ${vurl}"; break; }
+    else
+      curl -s --digest -u "${ui_user}:${ui_pass}" "$vurl/eshealth.json" | grep -q '{' && { log "[arkime] viewer healthy at ${vurl}"; break; }
+    fi
+    sleep 1
+  done
+  if (( tries < 0 )); then
+    warn "[arkime] viewer health not reachable yet; check /opt/arkime/logs/viewer.log"
+  fi
+
+  log "[arkime] install + configure complete"
+}
+
 # =========================
 # Entry
 # =========================
 if [[ ${#RECIPES[@]} -eq 0 ]]; then
-  run_recipe 0trace
-  run_recipe amap
-  run_recipe apache-users
-  run_recipe apktool
+  #run_recipe 0trace
+  #run_recipe amap
+  #run_recipe apache-users
+  #run_recipe apktool
   run_recipe apple_bleee
+  run_recipe arkime
 else
   for r in "${RECIPES[@]}"; do
     run_recipe "$r"

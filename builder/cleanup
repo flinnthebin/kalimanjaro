@@ -45,7 +45,7 @@ rmdir_safe() {
 refresh_mandb() {
   if command -v mandb >/dev/null 2>&1; then
     log "refreshing man-db"
-    with_sudo mandb >/dev/null || warn "mandb refresh failed"
+    with_sudo mandb >/dev/null 2>&1 || warn "mandb refresh failed"
   fi
 }
 
@@ -130,6 +130,40 @@ clean_apple_bleee() {
   rm_if_exists "$PREFIX/lib/libawdl.a" "$PREFIX/lib/libradiotap.a"
   with_sudo rm -rf "$PREFIX/share/apple-bleee" 2>/dev/null || true
   log "[apple-bleee] cleanup complete"
+}
+
+clean_arkime() {
+  log "[arkime] stopping & disabling services"
+  with_sudo systemctl disable --now arkimecapture arkimeviewer 2>/dev/null || true
+
+  # Prefer clean package removal on Arch/Manjaro
+  if command -v pacman >/dev/null 2>&1 && pacman -Qq arkime &>/dev/null; then
+    log "[arkime] removing pacman package"
+    with_sudo pacman -Rns --noconfirm arkime >/dev/null 2>&1 || warn "pacman removal failed; continuing with manual cleanup"
+  fi
+
+  log "[arkime] removing installed files"
+  # Logrotate config
+  rm_if_exists "/etc/logrotate.d/arkime"
+
+  # Systemd unit files (package usually installs under /usr/lib)
+  rm_if_exists \
+    "/usr/lib/systemd/system/arkimecapture.service" \
+    "/usr/lib/systemd/system/arkimeviewer.service" \
+    "/etc/systemd/system/arkimecapture.service" \
+    "/etc/systemd/system/arkimeviewer.service"
+
+  # Remove any dangling symlinks from wants/
+  with_sudo rm -f /etc/systemd/system/multi-user.target.wants/arkimecapture.service 2>/dev/null || true
+  with_sudo rm -f /etc/systemd/system/multi-user.target.wants/arkimeviewer.service 2>/dev/null || true
+
+  # Main install tree
+  with_sudo rm -rf "/opt/arkime" 2>/dev/null || true
+
+  # Reload systemd so unit removals take effect
+  with_sudo systemctl daemon-reload 2>/dev/null || true
+
+  log "[arkime] cleanup complete"
 }
 
 # ---------- Entry ----------

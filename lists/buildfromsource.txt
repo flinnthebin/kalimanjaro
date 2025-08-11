@@ -3,8 +3,6 @@ amap
 apache-users
 apktool
 apple-bleee
-apt2
-arachni
 arkime
 armitage
 automater
