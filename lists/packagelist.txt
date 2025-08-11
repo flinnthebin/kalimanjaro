@@ -214,53 +214,6 @@ freeipmi - IPMI management tools (active, pacman).
 freeradius-wpe - FreeRADIUS with EAP/WPE patches for credential capture (active, build from source).
 freerdp - RDP client/server tools (active, pacman).
 fruitywifi - Modular wireless network attack platform (active, build from source).
-fruitywifi-module-3g-4g - FruityWiFi 3G/4G module ((optional), build from source).
-fruitywifi-module-ap - FruityWiFi AP module ((optional), build from source).
-fruitywifi-module-api - FruityWiFi API module ((optional), build from source).
-fruitywifi-module-automaton - FruityWiFi automation module ((optional), build from source).
-fruitywifi-module-autossh - FruityWiFi AutoSSH module ((optional), build from source).
-fruitywifi-module-autostart - FruityWiFi autostart module ((optional), build from source).
-fruitywifi-module-bdfproxy - FruityWiFi BDFProxy integration ((optional), build from source).
-fruitywifi-module-beef - FruityWiFi BeEF integration ((optional), build from source).
-fruitywifi-module-bettercap - FruityWiFi Bettercap integration ((optional), build from source).
-fruitywifi-module-captive - FruityWiFi captive portal module ((optional), build from source).
-fruitywifi-module-detectdeauth - FruityWiFi deauth detection ((optional), build from source).
-fruitywifi-module-detectrogue - FruityWiFi rogue AP detection ((optional), build from source).
-fruitywifi-module-devicefinder - FruityWiFi device finder ((optional), build from source).
-fruitywifi-module-dnsspoof - FruityWiFi DNS spoof module ((optional), build from source).
-fruitywifi-module-ettercap - FruityWiFi Ettercap integration ((optional), build from source).
-fruitywifi-module-fruitydns - FruityWiFi DNS module ((optional), build from source).
-fruitywifi-module-fruityproxy - FruityWiFi proxy module ((optional), build from source).
-fruitywifi-module-hopper - FruityWiFi Hopper module ((optional), build from source).
-fruitywifi-module-karma - FruityWiFi Karma module ((optional), build from source).
-fruitywifi-module-kismet - FruityWiFi Kismet integration ((optional), build from source).
-fruitywifi-module-mana - FruityWiFi Mana toolkit integration ((optional), build from source).
-fruitywifi-module-mdk3 - FruityWiFi MDK3 integration ((optional), build from source).
-fruitywifi-module-metasploit - FruityWiFi Metasploit integration ((optional), build from source).
-fruitywifi-module-meterpreter - FruityWiFi Meterpreter integration ((optional), build from source).
-fruitywifi-module-nessus - FruityWiFi Nessus integration ((optional), build from source).
-fruitywifi-module-nginx - FruityWiFi nginx module ((optional), build from source).
-fruitywifi-module-ngrep - FruityWiFi ngrep integration ((optional), build from source).
-fruitywifi-module-nmap - FruityWiFi Nmap integration ((optional), build from source).
-fruitywifi-module-nmcli - FruityWiFi nmcli integration ((optional), build from source).
-fruitywifi-module-openvpn - FruityWiFi OpenVPN integration ((optional), build from source).
-fruitywifi-module-phishing - FruityWiFi phishing module ((optional), build from source).
-fruitywifi-module-recon - FruityWiFi recon module ((optional), build from source).
-fruitywifi-module-responder - FruityWiFi Responder integration ((optional), build from source).
-fruitywifi-module-rpitwit - FruityWiFi Raspberry Pi Twitter module ((optional), build from source).
-fruitywifi-module-squid3 - FruityWiFi Squid proxy integration ((optional), build from source).
-fruitywifi-module-sshuttle - FruityWiFi SSHuttle integration ((optional), build from source).
-fruitywifi-module-sslstrip - FruityWiFi SSLstrip integration ((optional), build from source).
-fruitywifi-module-sslstrip2 - FruityWiFi SSLstrip2 integration ((optional), build from source).
-fruitywifi-module-stalker - FruityWiFi stalker module ((optional), build from source).
-fruitywifi-module-supplicant - FruityWiFi supplicant module ((optional), build from source).
-fruitywifi-module-tapper - FruityWiFi Tapper module ((optional), build from source).
-fruitywifi-module-tcpdump - FruityWiFi tcpdump integration ((optional), build from source).
-fruitywifi-module-tor - FruityWiFi Tor integration ((optional), build from source).
-fruitywifi-module-urlsnarf - FruityWiFi urlsnarf integration ((optional), build from source).
-fruitywifi-module-vfeed - FruityWiFi vFeed integration ((optional), build from source).
-fruitywifi-module-whatsapp - FruityWiFi WhatsApp module ((optional), build from source).
-fruitywifi-module-wifirecon - FruityWiFi Wi-Fi recon module ((optional), build from source).
 ftester - Firewall testing tool (active, build from source).
 fudgec2 - Minimal post-exploitation C2 (active, build from source).
 funkload - Web performance/load tester (optional, pipx install funkload).
