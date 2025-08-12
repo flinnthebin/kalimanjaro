@@ -4,13 +4,8 @@ apache-users
 apktool
 apple-bleee
 arkime
-armitage
-automater
 b374k
-backdoor-factory
-bdfproxy
 berate-ap
-blindelephant
 bloodyad
 blue-hydra
 bluemaho
