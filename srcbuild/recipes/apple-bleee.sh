@@ -3,9 +3,12 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
-# ENV knobs (override as needed)
+# ---------- env ----------
+: "${PREFIX:=/usr/local}"
+: "${SRC:?set by srcbuild}"
 : "${APPLE_BLEEE_PBS_URL:=}" # explicit PBS asset URL (optional)
-: "${APPLE_BLEEE_SHARE_DIR:=/usr/local/share/apple-bleee}"
+: "${APPLE_BLEEE_SHARE_DIR:=$PREFIX/share/apple-bleee}"
+# ---------- env ----------
 
 deps() {
   cat <<EOF
@@ -27,6 +30,21 @@ tar
 clang
 openssl-1.1
 EOF
+}
+
+pre() {
+  log "[apple-bleee] preflight: repos & PBS asset"
+  curl -fsI https://github.com/hexway/apple_bleee >/dev/null || warn "apple_bleee repo unreachable"
+  curl -fsI https://github.com/seemoo-lab/owl >/dev/null || warn "owl repo unreachable"
+  # PBS probe (no fail if GH rate-limited)
+  local trip
+  case "$(uname -m)" in
+    x86_64) trip="x86_64-unknown-linux-gnu";;
+    aarch64) trip="aarch64-unknown-linux-gnu";;
+    *) trip="";;
+  esac
+  [[ -n "$trip" ]] && curl -fsSL "https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest" \
+    | jq -er --arg t "$trip" '.assets[]?.browser_download_url | select(test($t))' >/dev/null || warn "PBS probe failed"
 }
 
 _patch_pyfixes() {
@@ -72,7 +90,7 @@ _resolve_pbs_url() {
   if [[ -z "$urls" ]]; then
     urls="$(curl -fsSL "${api_base}?per_page=20" \
       | jq -r --arg trip "$trip" '
-          .[]? .assets[]?.browser_download_url
+          .[]?.assets[]?.browser_download_url
           | select(test("^https://.*/cpython-3\\.10\\.[0-9]+\\+[0-9]+-" + $trip + "-install_only\\.tar\\.(gz|zst|xz)$"))
         ' 2>/dev/null | sort -V | tail -n1)" || true
   fi
@@ -101,7 +119,7 @@ build() {
     sed -i -E 's/^[[:space:]]*add_subdirectory\((googletest)\)/# \0/' CMakeLists.txt || true
     sed -i -E 's/^[[:space:]]*add_subdirectory\((tests)\)/# \0/' CMakeLists.txt || true
     mkdir -p build && cd build
-    quiet_run cmake ..
+    quiet_run cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" ..
     quiet_run make -j"$(nproc)" owl
     quiet_run with_sudo make install
   )
@@ -154,25 +172,25 @@ build() {
   fi
 
   log "[apple-bleee] creating uv venv ($uv_venv) with PBS Python"
-  quiet_run uv venv "$uv_venv" --python "$pbs_py"
+  quiet_run with_sudo uv venv "$uv_venv" --python "$pbs_py"
 
   # Clean uv cache
   rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/uv/builds-v0" 2>/dev/null || true
 
   # build netifaces with HAVE_GETIFADDRS
   CFLAGS="${CFLAGS:-} -DHAVE_GETIFADDRS=1" \
-    quiet_run uv pip install --python "$uv_venv/bin/python" --no-binary netifaces netifaces \
-    || die "[apple-bleee] uv pip install (netifaces) failed"
+  quiet_run with_sudo uv pip install --python "$uv_venv/bin/python" --no-binary netifaces netifaces \
+  || die "[apple-bleee] uv pip install (netifaces) failed"
 
   # deps for airdrop-leak (Pillow + ctypescrypto + older cryptography)
-  quiet_run uv pip install --python "$uv_venv/bin/python" \
-    beautifulsoup4 fleep libarchive-c Pillow prettytable pycryptodome requests "ctypescrypto==0.5" "cryptography<40" \
-    || die "[apple-bleee] uv pip install failed"
+  quiet_run with_sudo uv pip install --python "$uv_venv/bin/python" \
+  beautifulsoup4 fleep libarchive-c Pillow prettytable pycryptodome requests "ctypescrypto==0.5" "cryptography<40" \
+  || die "[apple-bleee] uv pip install failed"
 
   # wrapper helper
   _mk_wrapper() {
     local name="$1" script="$2" py="$3" env_lines="${4:-}"
-    with_sudo install -Dm755 /dev/stdin "/usr/local/bin/$name" <<EOF
+    with_sudo install -Dm755 /dev/stdin "$PREFIX/bin/$name" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 ${env_lines}
@@ -197,13 +215,28 @@ if [[ ! -e "$LIBCRYPTO11" || ! -e "$LIBSSL11" ]]; then
 fi
 export LD_PRELOAD="${LIBCRYPTO11}:${LIBSSL11}:${LD_PRELOAD:-}"
 export CTYPESCRYPTO_LIBCRYPTO="${LIBCRYPTO11}"'
+
+log "[apple-bleee] installed wrappers to $PREFIX/bin (ble-read-state, adv-wifi, adv-airpods, airdrop-leak)"
 }
 
 install() {
   log "[apple-bleee] install handled during build; nothing to do"
 }
 
+post() {
+  log "[apple-bleee] post: smoke"
+  for t in ble-read-state adv-wifi adv-airpods airdrop-leak; do
+    command -v "$PREFIX/bin/$t" >/dev/null || warn "wrapper missing: $t"
+    "$PREFIX/bin/$t" -h >/dev/null || true
+  done
+  # Confirm OpenSSL 1.1 check trips properly without the libs
+  if ! [[ -e /usr/lib/libssl.so.1.1 ]]; then
+    "$PREFIX/bin/airdrop-leak" &>/tmp/airdrop-leak.out || true
+    grep -q "OpenSSL 1.1 not found" /tmp/airdrop-leak.out || warn "airdrop-leak OpenSSL guard not hit"
+  fi
+}
+
 case "${1:-}" in
-  deps|fetch|build|install) "$1" ;;
-  *) die "usage: $0 {deps|fetch|build|install}" ;;
+  deps|pre|fetch|build|install|post) "$1" ;;
+  *) die "usage: $0 {deps|pre|fetch|build|install|post}" ;;
 esac

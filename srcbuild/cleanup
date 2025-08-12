@@ -132,6 +132,37 @@ clean_apple_bleee() {
   log "[apple-bleee] cleanup complete"
 }
 
+clean_opensearch() {
+  log "[opensearch] stopping & disabling service"
+  with_sudo systemctl disable --now opensearch 2>/dev/null || true
+
+  # Prefer clean package removal on Arch/Manjaro
+  if command -v pacman >/dev/null 2>&1 && pacman -Qq opensearch &>/dev/null; then
+    log "[opensearch] removing pacman package"
+    with_sudo pacman -Rns --noconfirm opensearch >/dev/null 2>&1 || \
+      warn "pacman removal failed; continuing with manual cleanup"
+  fi
+
+  log "[opensearch] removing installed files"
+  # JVM options & config dirs
+  with_sudo rm -rf /etc/opensearch 2>/dev/null || true
+  with_sudo rm -rf /usr/share/opensearch 2>/dev/null || true
+  with_sudo rm -rf /var/lib/opensearch 2>/dev/null || true
+  with_sudo rm -rf /var/log/opensearch 2>/dev/null || true
+
+  # Remove systemd units if they still exist
+  rm_if_exists \
+    "/usr/lib/systemd/system/opensearch.service" \
+    "/etc/systemd/system/opensearch.service"
+
+  with_sudo rm -f /etc/systemd/system/multi-user.target.wants/opensearch.service 2>/dev/null || true
+
+  # Reload systemd so unit removals take effect
+  with_sudo systemctl daemon-reload 2>/dev/null || true
+
+  log "[opensearch] cleanup complete"
+}
+
 clean_arkime() {
   log "[arkime] stopping & disabling services"
   with_sudo systemctl disable --now arkimecapture arkimeviewer 2>/dev/null || true
