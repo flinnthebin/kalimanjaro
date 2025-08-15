@@ -4,17 +4,17 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
+: "${NAME:=0trace}"
+: "${DEP_NAME:=sendprobe}"
 : "${PREFIX:=/usr/local}"
-: "${BIN:=bin}"
-: "${MAN:=share/man/man1}"
+: "${BIN:=${PREFIX}/bin}"
+: "${MAN:=${PREFIX}/share/man/man1}"
 : "${DEP:=libexec}"
 : "${SRC:?set by srcbuild}"
 : "${REPO:=http://lcamtuf.coredump.cx/soft/0trace.tgz}"
 : "${FILE:=0trace.sh}"
 : "${PANDOC_MAN:=0}"
 : "${SECTION:=1}"
-: "${NAME:=0trace}"
-: "${DEPNAME:=sendprobe}"
 # ---------- env ----------
 
 deps() { cat <<'EOF'
@@ -146,7 +146,7 @@ MD
 
   quiet_run gzip -f -9 "$out_man"
   quiet_run with_sudo install -Dm644 "${out_man}.gz" \
-    "${PREFIX}/${MAN}/${NAME}.${SECTION}.gz"
+    "${MAN}/${NAME}.${SECTION}.gz"
 
   # touch man-db (best-effort)
   if command -v mandb >/dev/null 2>&1; then
@@ -171,16 +171,16 @@ fetch() {
 }
 
 build() {
-  log "[${NAME}] compiling ${DEPNAME} & patching script"
+  log "[${NAME}] compiling ${DEP_NAME} & patching script"
   (
     cd "$SRC/${NAME}"
-    quiet_run gcc -O2 -Wall -o "${DEPNAME}" "${DEPNAME}".c
+    quiet_run gcc -O2 -Wall -o "${DEP_NAME}" "${DEP_NAME}".c
 
     # Patch 0trace.sh so it uses an installed helper:
     # - add PROBE default to PREFIX/libexec/0trace/sendprobe
     # - replace ./sendprobe with "$PROBE"
     quiet_run sed -E \
-      -e "1i PROBE=\${PROBE:-\"${PREFIX}\"/${DEP}/${NAME}/${DEPNAME}}" \
+      -e "1i PROBE=\${PROBE:-\"${PREFIX}\"/${DEP}/${NAME}/${DEP_NAME}}" \
       -e 's#\./sendprobe#"$PROBE"#g' \
       ${FILE} > ${NAME}.patched
     chmod +x ${NAME}.patched
@@ -189,29 +189,29 @@ build() {
 
 install() {
   log "[$NAME] installing"
-  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${DEPNAME}" "$PREFIX/${DEP}/${NAME}/${DEPNAME}"
-  quiet_run with_sudo install -Dm755 "$SRC/${NAME}/${NAME}.patched" "$PREFIX/${BIN}/$NAME"
-  quiet_run with_sudo setcap cap_net_raw+ep "${PREFIX}/${DEP}/${NAME}/${DEPNAME}" || warn "[${NAME}] setcap failed; run ${NAME} with sudo"
+  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${DEP_NAME}" "$PREFIX/${DEP}/${NAME}/${DEP_NAME}"
+  quiet_run with_sudo install -Dm755 "$SRC/${NAME}/${NAME}.patched" "${BIN}/$NAME"
+  quiet_run with_sudo setcap cap_net_raw+ep "${PREFIX}/${DEP}/${NAME}/${DEP_NAME}" || warn "[${NAME}] setcap failed; run ${NAME} with sudo"
   log "[${NAME}] adding manpage"
   _install_manpage_from_pandoc
-  log "[${NAME}] installed to ${PREFIX}/bin/${NAME}"
+  log "[${NAME}] installed to ${BIN}/${NAME}"
 }
 
 post() {
   log "[${NAME}] post: smoke"
-  command -v "${PREFIX}/${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
-  "${PREFIX}/${BIN}/${NAME}" -h >/dev/null || true
+  command -v "${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
+  "${BIN}/${NAME}" -h >/dev/null || true
   if command -v getcap >/dev/null; then
-    getcap "${PREFIX}/${DEP}/${NAME}/${DEPNAME}" | grep -q cap_net_raw || warn "[${NAME}] ${DEPNAME} missing cap_net_raw"
+    getcap "${PREFIX}/${DEP}/${NAME}/${DEP_NAME}" | grep -q cap_net_raw || warn "[${NAME}] ${DEP_NAME} missing cap_net_raw"
   fi
 }
 
 uninstall() {
   log "[${NAME}] removing installed files"
   rm_if_exists \
-    "$PREFIX/${BIN}/${NAME}" \
-    "$PREFIX/${DEP}/${NAME}/${DEPNAME}" \
-    "$PREFIX/${MAN}/${NAME}.${SECTION}.gz"
+    "${BIN}/${NAME}" \
+    "$PREFIX/${DEP}/${NAME}/${DEP_NAME}" \
+    "${MAN}/${NAME}.${SECTION}.gz"
   rmdir_safe "$PREFIX/${DEP}/${NAME}"
 }
 

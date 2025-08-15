@@ -4,10 +4,11 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
-: "${PREFIX:=/usr/local/bin}"
+ "${NAME:="apache-users"}"
+: "${PREFIX:=/usr/local}"
+: "${BIN:=${PREFIX}/bin}"
 : "${SRC:?set by srcbuild}"
 : "${REPO:=https://raw.githubusercontent.com/CiscoCXSecurity/apache-users/master/apache2.pl}"
-: "${NAME:="apache-users"}"
 : "${FILE:=apache2.pl}"
 # ---------- env ----------
 
@@ -46,21 +47,21 @@ build() {
 }
 
 install() {
-  log "[apache-users] installing to ${PREFIX}/${NAME}"
-  quiet_run with_sudo install -Dm755 "$SRC/${FILE}" "${PREFIX}/${NAME}"
-  log "[apache-users] installed: ${PREFIX}/${NAME}"
+  log "[apache-users] installing to ${BIN}/${NAME}"
+  quiet_run with_sudo install -Dm755 "$SRC/${FILE}" "${BIN}/${NAME}"
+  log "[apache-users] installed: ${BIN}/${NAME}"
 }
 
 post() {
   log "[apache-users] post: smoke"
-  command -v "${PREFIX}/${NAME}" >/dev/null || die "binary missing"
-  "${PREFIX}/${NAME}" -h >/dev/null || true
-  perl -c "${PREFIX}/${NAME}" >/dev/null || warn "perl syntax warn"
+  command -v "${BIN}/${NAME}" >/dev/null || die "binary missing"
+  "${BIN}/${NAME}" -h >/dev/null || true
+  perl -c "${BIN}/${NAME}" >/dev/null || warn "perl syntax warn"
 }
 
 uninstall() {
   log "[${NAME}] removing installed files"
-  rm_if_exists "${PREFIX}/${NAME}"
+  rm_if_exists "${BIN}/${NAME}"
 }
 
 case "${1:-}" in

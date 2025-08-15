@@ -12,14 +12,15 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
+: "${NAME:="hostapd-mana"}"
+: "${CLI:="hostapd-mana_cli"}"
 : "${PREFIX:=/usr/local}"
-: "${BIN:=bin}"
+: "${BIN:=${PREFIX}/bin}"
 : "${SRC:?set by srcbuild}"
 : "${MANA_VERSION:=2.6.4}"
 : "${MANA_URL:=https://github.com/sensepost/hostapd-mana/releases/download/${MANA_VERSION}/hostapd-mana-ELF-x86-64.zip}"
 : "${MANA_FORCE_REINSTALL:=0}"
-: "${NAME:="hostapd-mana"}"
-: "${NAME:="hostapd-mana_cli"}"
+: "${SYSTEMD:=/etc/systemd/system}"
 # ---------- env ----------
 
 deps() { cat <<'EOF'
@@ -91,14 +92,14 @@ fetch() {
 build() { :; }  # prebuilt
 
 install() {
-  local destbin="${PREFIX}/${BIN}/${NAME}"
+  local destbin="${BIN}/${NAME}"
   log "[${NAME}] installing ${destbin}"
   quiet_run with_sudo install -Dm755 "${SRC}/${NAME}" "${destbin}"
   quiet_run with_sudo setcap cap_net_admin,cap_net_raw+eip "${destbin}" || warn "[${NAME}] setcap failed; run as root"
 
   # Optional CLI
   if [[ -f "${SRC}/${CLI}" ]]; then
-    local destcli="${PREFIX}/${BIN}/${NAME}_cli"
+    local destcli="${BIN}/${CLI}"
     quiet_run with_sudo install -Dm755 "${SRC}/${CLI" "${destcli}"
   fi
 
@@ -125,7 +126,7 @@ wpa_passphrase=passw0rd123
 CFG
   fi
 
-  local unit=/etc/systemd/system/hostapd-mana@.service
+  local unit=${SYSTEMD}/${NAME}@.service
   if [[ ! -f "${unit}" ]]; then
     with_sudo tee "${unit}" >/dev/null <<UNIT
 [Unit]
@@ -150,8 +151,8 @@ UNIT
 
 post() {
   log "[${NAME}] post: smoke"
-  "${PREFIX}/${BIN}/${NAME}" -v >/dev/null 2>&1 || warn "[${NAME}] version probe failed (run as root?)"
-  command -v "${PREFIX}/${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary not in PATH"
+  "${BIN}/${NAME}" -v >/dev/null 2>&1 || warn "[${NAME}] version probe failed (run as root?)"
+  command -v "${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary not in PATH"
 }
 
 uninstall() {
@@ -172,8 +173,8 @@ uninstall() {
 
   log "[${NAME}] removing binaries, configs, logs"
   rm_if_exists \
-    "$PREFIX/${BIN}/${NAME}" \
-    "$PREFIX/${BIN}/${CLI}"
+    "${BIN}/${NAME}" \
+    "${BIN}/${CLI}"
 
 
   with_sudo rm -rf /etc/hostapd-mana 2>/dev/null || true

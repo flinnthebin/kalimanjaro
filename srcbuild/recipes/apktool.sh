@@ -4,7 +4,10 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
+: "${NAME:=apktool}"
 : "${PREFIX:=/usr/local}"
+: "${BIN:=${PREFIX}/bin}"
+: "${MAN:=${PREFIX}/share/man/man1}"
 : "${SRC:?set by srcbuild}"
 : "${SECTION:=1}"
 : "${API:=https://api.bitbucket.org/2.0/repositories/iBotPeaches/apktool/downloads}"
@@ -161,7 +164,7 @@ MD
 
   quiet_run gzip -f -9 "${out_man}"
   quiet_run with_sudo install -Dm644 "${out_man}.gz" \
-    "${PREFIX}/share/man/man${SECTION}/${NAME}.${SECTION}.gz"
+    "${MAN}/${NAME}.${SECTION}.gz"
 
   if command -v mandb >/dev/null 2>&1; then
     quiet_run with_sudo mandb || true
@@ -172,7 +175,7 @@ pre() {
   log "[${NAME}] preflight: Bitbucket API and wrapper URL"
   curl -fsI "${API}?pagelen=1" >/dev/null \
     || warn "[${NAME}] Bitbucket API not reachable"
-  curl -fsI "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool" >/dev/null \
+  curl -fsI "${REPO}" >/dev/null \
     || warn "[${NAME}] wrapper URL not reachable"
   # quick version parse dry run
   local jar ver
@@ -205,26 +208,26 @@ fetch() {
 
 build() {
   log "[${NAME}] no build step (script + jar)"
-  quiet_run sed -i "s|^jarpath=.*|jarpath=\"${PREFIX}/bin/${NAME}.jar\"|" "${SRC}/${NAME}"
+  quiet_run sed -i "s|^jarpath=.*|jarpath=\"${BIN}/${NAME}.jar\"|" "${SRC}/${NAME}"
   quiet_run chmod +x "${SRC}/${NAME}"
 }
 
 install() {
   log "[${NAME}] installing"
-  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}" "${PREFIX}/bin/${NAME}"
-  quiet_run with_sudo install -Dm644 "${SRC}/${NAME}.jar" "${PREFIX}/bin/${NAME}.jar"
+  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}" "${BIN}/${NAME}"
+  quiet_run with_sudo install -Dm644 "${SRC}/${NAME}.jar" "${BIN}/${NAME}.jar"
   log "[${NAME}] adding manpage"
   _install_manpage_from_pandoc
-  log "[${NAME}] installed: ${PREFIX}/bin/${NAME} + ${NAME}.jar"
+  log "[${NAME}] installed: ${BIN}/${NAME} + ${NAME}.jar"
 }
 
 post() {
   log "[${NAME}] post: smoke"
-  command -v "${PREFIX}/bin/${NAME}" >/dev/null || die "wrapper missing"
-  if ! "${PREFIX}/bin/${NAME}" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
+  command -v "${BIN}/${NAME}" >/dev/null || die "wrapper missing"
+  if ! "${BIN}/${NAME}" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
     warn "${NAME} v did not return a valid version"
   fi
-  if ! java -jar "${PREFIX}/bin/${NAME}.jar" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
+  if ! java -jar "${BIN}/${NAME}.jar" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
     warn "${NAME}.jar not runnable"
   fi
 }
@@ -232,9 +235,9 @@ post() {
 uninstall() {
   log "[${NAME}] removing installed files"
   rm_if_exists \
-    "${PREFIX}/bin/${NAME}" \
-    "${PREFIX}/bin/${NAME}.jar" \
-    "${PREFIX}/share/man/man1/${NAME}.1.gz"
+    "${BIN}/${NAME}" \
+    "${BIN}/${NAME}.jar" \
+    "${MAN}/${NAME}.1.gz"
 }
 
 case "${1:-}" in

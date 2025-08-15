@@ -4,10 +4,12 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
+: "${NAME:=amap}"
+: "${DEPNAME:=amapcrap}"
 : "${PREFIX:=/usr/local}"
-: "${BIN:=bin}"
-: "${SHARE:=share}"
-: "${MAN:=share/man/man1}"
+: "${BIN:=${PREFIX}/bin}"
+: "${SHARE:=${PREFIX}/share}"
+: "${MAN:=${PREFIX}/share/man/man1}"
 : "${DEP:=libexec}"
 : "${SRC:?set by srcbuild}"
 : "${LIST=https://github.com/hackerschoice/THC-Archive/tree/master/Tools}"
@@ -95,49 +97,49 @@ install() {
   local dir="${SRC}/${NAME}"
   log "[${NAME}] installing"
   if [[ -f "${dir}/.direct-build" ]]; then
-    quiet_run with_sudo install -Dm755 "${dir}/${NAME}" "${PREFIX}/${BIN}/${NAME}"
-    [[ -x "${dir}/${DEPNAME}" ]] && quiet_run with_sudo install -Dm755 "$dir/${DEPNAME}" "${PREFIX}/${BIN}/${DEPNAME}"
+    quiet_run with_sudo install -Dm755 "${dir}/${NAME}" "${BIN}/${NAME}"
+    [[ -x "${dir}/${DEPNAME}" ]] && quiet_run with_sudo install -Dm755 "$dir/${DEPNAME}" "${BIN}/${DEPNAME}"
     for f in appdefs.resp appdefs.trig appdefs.rpc; do
-      quiet_run with_sudo install -Dm644 "${dir}/$f" "${PREFIX}/${SHARE}/${NAME}/$f"
+      quiet_run with_sudo install -Dm644 "${dir}/$f" "${SHARE}/${NAME}/$f"
     done
-    quiet_run with_sudo install -Dm644 "${dir}/${NAME}.${SECTION}" "${PREFIX}/${MAN}/${NAME}.${SECTION}" || true
-    [[ -f "${dir}/${DEPNAME}.${SECTION}" ]] && quiet_run with_sudo install -Dm644 "${dir}/${DEPNAME}.${SECTION}" "${PREFIX}/${MAN}/${DEPNAME}.${SECTION}" || true
+    quiet_run with_sudo install -Dm644 "${dir}/${NAME}.${SECTION}" "${MAN}/${NAME}.${SECTION}" || true
+    [[ -f "${dir}/${DEPNAME}.${SECTION}" ]] && quiet_run with_sudo install -Dm644 "${dir}/${DEPNAME}.${SECTION}" "${MAN}/${DEPNAME}.${SECTION}" || true
     command -v mandb >/dev/null && quiet_run with_sudo mandb || true
   else
     ( cd "${dir}" && quiet_run with_sudo make install || true )
     [[ -x "${dir}/${DEPNAME}" ]] && quiet_run with_sudo install -Dm755 "$dir/${DEPNAME}" "${PREFIX}"/bin/${DEPNAME}
-    [[ -f "${dir}/${DEPNAME}.${SECTION}" ]] && quiet_run with_sudo install -Dm644 "$dir/${DEPNAME}.${SECTION}" "${PREFIX}/${MAN}/${DEPNAME}.${SECTION}" || true
+    [[ -f "${dir}/${DEPNAME}.${SECTION}" ]] && quiet_run with_sudo install -Dm644 "$dir/${DEPNAME}.${SECTION}" "${MAN}/${DEPNAME}.${SECTION}" || true
     command -v mandb >/dev/null && quiet_run with_sudo mandb || true
   fi
-  log "[${NAME}] installed to ${PREFIX}/${BIN}/${NAME}"
-  [[ -x "{$PREFIX}/${BIN}/${DEPNAME}" ]] && log "[${NAME}] installed ${DEPNAME} to "${PREFIX}"/${BIN}/${DEPNAME}"
+  log "[${NAME}] installed to ${BIN}/${NAME}"
+  [[ -x "${BIN}/${DEPNAME}" ]] && log "[${NAME}] installed ${DEPNAME} to ${BIN}/${DEPNAME}"
 }
 
 post() {
   log "[${NAME}] post: smoke"
-  command -v "${PREFIX}/${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
+  command -v "${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
 
   # exits 1; version banner == success
   local out
-  out="$("${PREFIX}/${BIN}/${NAME}" -h 2>&1 || true)"
+  out="$("${BIN}/${NAME}" -h 2>&1 || true)"
   echo "$out" | grep -qE '^amap v[0-9]+\.[0-9]+' \
     || warn "[${NAME}] help/version banner not detected"
 
-  if command -v "${PREFIX}/${BIN}/${DEPNAME}" >/dev/null; then
+  if command -v "${BIN}/${DEPNAME}" >/dev/null; then
     local out2
-    out2="$("${PREFIX}/${BIN}/${DEPNAME}" -h 2>&1 || true)"
+    out2="$("${BIN}/${DEPNAME}" -h 2>&1 || true)"
     echo "$out2" | grep -qE '^amapcrap v[0-9]+\.[0-9]+' \
       || warn "[${NAME}] ${DEPNAME} help/version banner not detected"
   fi
 
   # data files present and non-empty
   for f in appdefs.resp appdefs.trig appdefs.rpc; do
-    [[ -s "${PREFIX}/${SHARE}/${NAME}/$f" ]] || warn "[${NAME}] missing or empty data file: $f"
+    [[ -s "${SHARE}/${NAME}/$f" ]] || warn "[${NAME}] missing or empty data file: $f"
   done
 
   # check required shared libs resolve
   if command -v ldd >/dev/null; then
-    ldd "${PREFIX}/${BIN}/${NAME}" 2>/dev/null | grep -q "not found" && \
+    ldd "${BIN}/${NAME}" 2>/dev/null | grep -q "not found" && \
       warn "[${NAME}] missing shared libraries (ldd reported 'not found')"
   fi
 }
@@ -145,14 +147,14 @@ post() {
 uninstall() {
   log "[${NAME}] removing installed files"
   rm_if_exists \
-    "$PREFIX/${BIN}/${NAME}" \
-    "$PREFIX/${BIN}/${DEPNAME}" \
-    "$PREFIX/${SHARE}/${NAME}/appdefs.resp" \
-    "$PREFIX/${SHARE}/${NAME}/appdefs.trig" \
-    "$PREFIX/${SHARE}/${NAME}/appdefs.rpc" \
-    "$PREFIX/${MAN}/${NAME}.${SECTION}" \
-    "$PREFIX/${MAN}/${DEPNAME}.${SECTION}"
-  rmdir_safe "$PREFIX/${SHARE}/${NAME}"
+    "${BIN}/${NAME}" \
+    "${BIN}/${DEPNAME}" \
+    "${SHARE}/${NAME}/appdefs.resp" \
+    "${SHARE}/${NAME}/appdefs.trig" \
+    "${SHARE}/${NAME}/appdefs.rpc" \
+    "${MAN}/${NAME}.${SECTION}" \
+    "${MAN}/${DEPNAME}.${SECTION}"
+  rmdir_safe "${SHARE}/${NAME}"
 }
 
 case "${1:-}" in
