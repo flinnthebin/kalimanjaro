@@ -5,9 +5,12 @@ IFS=$'\n\t'
 
 # ---------- env ----------
 : "${PREFIX:=/usr/local}"
+: "${BIN:=bin}"
+: "${MAN:=share/man/man1}"
 : "${SRC:?set by srcbuild}"
 : "${APPLE_BLEEE_PBS_URL:=}" # explicit PBS asset URL (optional)
 : "${APPLE_BLEEE_SHARE_DIR:=$PREFIX/share/apple-bleee}"
+: "${NAME:="apple-bleee"}"
 # ---------- env ----------
 
 deps() {
@@ -33,7 +36,7 @@ EOF
 }
 
 pre() {
-  log "[apple-bleee] preflight: repos & PBS asset"
+  log "[${NAME}] preflight: repos & PBS asset"
   curl -fsI https://github.com/hexway/apple_bleee >/dev/null || warn "apple_bleee repo unreachable"
   curl -fsI https://github.com/seemoo-lab/owl >/dev/null || warn "owl repo unreachable"
   # PBS probe (no fail if GH rate-limited)

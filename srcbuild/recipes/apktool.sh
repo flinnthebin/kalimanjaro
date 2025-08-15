@@ -6,8 +6,10 @@ IFS=$'\n\t'
 # ---------- env ----------
 : "${PREFIX:=/usr/local}"
 : "${SRC:?set by srcbuild}"
-: "${MAN_SECTION:=1}"
-: "${MAN_BASENAME:=apktool}"
+: "${SECTION:=1}"
+: "${API:=https://api.bitbucket.org/2.0/repositories/iBotPeaches/apktool/downloads}"
+: "${REPO:=https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool}"
+: "${NAME:=apktool}"
 # ---------- env ----------
 
 deps() { cat <<EOF
@@ -20,9 +22,9 @@ EOF
 _install_manpage_from_pandoc() {
   require_cmd pandoc
   local tmp_md="${SRC}/apktool_man.md"
-  local out_man="${SRC}/${MAN_BASENAME}.${MAN_SECTION}"
+  local out_man="${SRC}/${NAME}.${SECTION}"
 
-  cat >"$tmp_md" <<'MD'
+  cat >"${tmp_md}" <<'MD'
 % APKTOOL(1) Apktool | User Commands
 # NAME
 apktool — Android APK decompilation and rebuilding utility
@@ -154,12 +156,12 @@ Project page: <https://ibotpeaches.github.io/Apktool/>
 
 MD
 
-  log "[apktool] generating manpage via pandoc"
-  quiet_run pandoc -s -t man "$tmp_md" -o "$out_man"
+  log "[${NAME}] generating manpage via pandoc"
+  quiet_run pandoc -s -t man "${tmp_md}" -o "${out_man}"
 
-  quiet_run gzip -f -9 "$out_man"
+  quiet_run gzip -f -9 "${out_man}"
   quiet_run with_sudo install -Dm644 "${out_man}.gz" \
-    "$PREFIX/share/man/man${MAN_SECTION}/${MAN_BASENAME}.${MAN_SECTION}.gz"
+    "${PREFIX}/share/man/man${SECTION}/${NAME}.${SECTION}.gz"
 
   if command -v mandb >/dev/null 2>&1; then
     quiet_run with_sudo mandb || true
@@ -167,68 +169,75 @@ MD
 }
 
 pre() {
-  log "[apktool] preflight: Bitbucket API and wrapper URL"
-  curl -fsI "https://api.bitbucket.org/2.0/repositories/iBotPeaches/apktool/downloads?pagelen=1" >/dev/null \
-    || warn "[apktool] Bitbucket API not reachable"
+  log "[${NAME}] preflight: Bitbucket API and wrapper URL"
+  curl -fsI "${API}?pagelen=1" >/dev/null \
+    || warn "[${NAME}] Bitbucket API not reachable"
   curl -fsI "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool" >/dev/null \
-    || warn "[apktool] wrapper URL not reachable"
+    || warn "[${NAME}] wrapper URL not reachable"
   # quick version parse dry run
   local jar ver
-  jar="$(curl -fsSL "https://api.bitbucket.org/2.0/repositories/iBotPeaches/apktool/downloads?pagelen=50" \
+  jar="$(curl -fsSL "${API}?pagelen=50" \
         | jq -r '.values[].name' | grep -E '^apktool_[0-9.]+\.jar$' | sort -V | tail -1)" || true
   ver="${jar#apktool_}"; ver="${ver%.jar}"
-  [[ -n "$ver" ]] || warn "[apktool] version parse failed"
+  [[ -n "${ver}" ]] || warn "[${NAME}] version parse failed"
 }
 
 fetch() {
   require_cmd curl
   require_cmd jq
-  log "[apktool] fetching wrapper script"
-  mkdir -p "$SRC"
-  curl -fsSL "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool" \
-    -o "$SRC/apktool"
+  log "[${NAME}] fetching wrapper script"
+  mkdir -p "${SRC}"
+  curl -fsSL "${REPO}" \
+    -o "${SRC}/${NAME}"
 
-  log "[apktool] discovering latest jar from Bitbucket"
-  local api="https://api.bitbucket.org/2.0/repositories/iBotPeaches/apktool/downloads?pagelen=50"
+  log "[${NAME}] discovering latest jar from Bitbucket"
   local jar
-  jar="$(curl -fsSL "$api" \
+  jar="$(curl -fsSL "${API}" \
         | jq -r '.values[].name' \
         | grep -E '^apktool_[0-9.]+\.jar$' \
         | sort -V \
         | tail -1)" || true
-  [[ -n "$jar" ]] || die "[apktool] could not detect latest jar"
+  [[ -n "${jar}" ]] || die "[${NAME}] could not detect latest jar"
 
-  log "[apktool] fetching $jar"
-  curl -fsSL "https://bitbucket.org/iBotPeaches/apktool/downloads/${jar}" -o "$SRC/apktool.jar"
+  log "[${NAME}] fetching ${jar}"
+  curl -fsSL "${API}/${jar}" -o "${SRC}/${NAME}.jar"
 }
 
 build() {
-  log "[apktool] no build step (script + jar)"
-  quiet_run sed -i "s|^jarpath=.*|jarpath=\"$PREFIX/bin/apktool.jar\"|" "$SRC/apktool"
-  quiet_run chmod +x "$SRC/apktool"
+  log "[${NAME}] no build step (script + jar)"
+  quiet_run sed -i "s|^jarpath=.*|jarpath=\"${PREFIX}/bin/${NAME}.jar\"|" "${SRC}/${NAME}"
+  quiet_run chmod +x "${SRC}/${NAME}"
 }
 
 install() {
-  log "[apktool] installing"
-  quiet_run with_sudo install -Dm755 "$SRC/apktool" "$PREFIX/bin/apktool"
-  quiet_run with_sudo install -Dm644 "$SRC/apktool.jar" "$PREFIX/bin/apktool.jar"
-  log "[apktool] adding manpage"
+  log "[${NAME}] installing"
+  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}" "${PREFIX}/bin/${NAME}"
+  quiet_run with_sudo install -Dm644 "${SRC}/${NAME}.jar" "${PREFIX}/bin/${NAME}.jar"
+  log "[${NAME}] adding manpage"
   _install_manpage_from_pandoc
-  log "[apktool] installed: $PREFIX/bin/apktool + apktool.jar"
+  log "[${NAME}] installed: ${PREFIX}/bin/${NAME} + ${NAME}.jar"
 }
 
 post() {
-  log "[apktool] post: smoke"
-  command -v "$PREFIX/bin/apktool" >/dev/null || die "wrapper missing"
-  if ! "$PREFIX/bin/apktool" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
-    warn "apktool v did not return a valid version"
+  log "[${NAME}] post: smoke"
+  command -v "${PREFIX}/bin/${NAME}" >/dev/null || die "wrapper missing"
+  if ! "${PREFIX}/bin/${NAME}" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
+    warn "${NAME} v did not return a valid version"
   fi
-  if ! java -jar "$PREFIX/bin/apktool.jar" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
-    warn "apktool.jar not runnable"
+  if ! java -jar "${PREFIX}/bin/${NAME}.jar" v 2>&1 | grep -qE '^[0-9]+\.[0-9]+'; then
+    warn "${NAME}.jar not runnable"
   fi
 }
 
+uninstall() {
+  log "[${NAME}] removing installed files"
+  rm_if_exists \
+    "${PREFIX}/bin/${NAME}" \
+    "${PREFIX}/bin/${NAME}.jar" \
+    "${PREFIX}/share/man/man1/${NAME}.1.gz"
+}
+
 case "${1:-}" in
-  deps|pre|fetch|build|install|post) "$1" ;;
-  *) die "usage: $0 {deps|pre|fetch|build|install|post}" ;;
+  deps|pre|fetch|build|install|post|uninstall) "$1" ;;
+  *) die "usage: $0 {deps|pre|fetch|build|install|post|uninstall}" ;;
 esac

@@ -6,7 +6,7 @@ apple-bleee
 arkime
 b374k
 berate-ap
-bloodyad
+bloodyad (pipx)
 blue-hydra
 bluemaho
 bluepot

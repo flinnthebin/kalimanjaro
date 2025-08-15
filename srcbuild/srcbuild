@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# A tiny framework for building old tools from source cleanly on Arch/Manjaro.
+# A tiny framework for building *and uninstalling* old tools from source cleanly on Arch/Manjaro.
 # Usage:
 #   ./build.sh [--debug] [--keep-work] [--phase P] [--no-deps] <recipe>...
+#   ./build.sh --uninstall <recipe>...
 # Examples:
 #   ./build.sh amap
 #   ./build.sh --debug apple_bleee 0trace
 #   ./build.sh --phase pre amap
 #   ./build.sh --phase post --no-deps 0trace
+#   ./build.sh --uninstall 0trace amap
 
 set -Eeuo pipefail
 IFS=$'\n\t'
@@ -15,7 +17,7 @@ IFS=$'\n\t'
 DEBUG=${DEBUG:-0}
 RECIPES=()
 KEEP_WORK=0
-PHASE="all"         # all | deps | pre | fetch | build | install | post
+PHASE="all"         # all | deps | pre | fetch | build | install | post | uninstall
 INSTALL_DEPS=1
 
 while [[ $# -gt 0 ]]; do
@@ -24,10 +26,12 @@ while [[ $# -gt 0 ]]; do
     --keep-work) KEEP_WORK=1; shift ;;
     --phase) PHASE="${2:-}"; shift 2 ;;
     --no-deps) INSTALL_DEPS=0; shift ;;
+    --uninstall) PHASE="uninstall"; shift ;;
     --list) find recipes -maxdepth 1 -name '*.sh' -printf '%f\n' | sed 's/\.sh$//'; exit 0 ;;
     -h|--help)
       printf "Usage: %s [--debug] [--keep-work] [--phase P] [--no-deps] <recipe>...\n" "$0"
-      printf "Phases: all (default), deps, pre, fetch, build, install, post\n"
+      printf "       %s --uninstall <recipe>...\n" "$0"
+      printf "Phases: all (default), deps, pre, fetch, build, install, post, uninstall\n"
       exit 0 ;;
     --) shift; break ;;
     *) RECIPES+=("$1"); shift ;;
@@ -74,7 +78,35 @@ clean_env_configure() {
   )
 }
 
-export -f log warn die quiet_run require_cmd with_sudo clean_env_configure
+# --- extra helpers that recipes often need for uninstall ---
+rm_if_exists() {
+  # args: <path>...
+  local p rc=0
+  for p in "$@"; do
+    if [[ -e "$p" || -L "$p" ]]; then
+      with_sudo rm -f -- "$p" || rc=1
+      log "removed: $p"
+    fi
+  done
+  return $rc
+}
+
+rmdir_safe() {
+  # args: <dir>...
+  local d
+  for d in "$@"; do
+    with_sudo rmdir --ignore-fail-on-non-empty -- "$d" 2>/dev/null || true
+  done
+}
+
+refresh_mandb() {
+  if command -v mandb >/dev/null 2>&1; then
+    log "refreshing man-db"
+    with_sudo mandb >/dev/null 2>&1 || warn "mandb refresh failed"
+  fi
+}
+
+export -f log warn die quiet_run require_cmd with_sudo clean_env_configure rm_if_exists rmdir_safe refresh_mandb
 
 has_phase() {
   local script="$1" phase="$2"
@@ -85,6 +117,7 @@ has_phase() {
 run_phase() {
   local phase="$1" name="$2" script="$3" work="$4" src="$5"
 
+  # Dependency handling only for 'deps' phase (and when not suppressed)
   if [[ "$phase" == "deps" ]]; then
     mapfile -t deps < <(DEBUG=$DEBUG WORK="$work" SRC="$src" "$script" deps || true)
     [[ ${#deps[@]} -gt 0 && $INSTALL_DEPS -eq 1 ]] && ensure_pkgs "${deps[@]}"
@@ -134,6 +167,10 @@ run_recipe() {
       run_phase deps "$name" "$script" "$work" "$src"
       run_phase "$PHASE" "$name" "$script" "$work" "$src"
       ;;
+    uninstall)
+      # uninstall should never auto-install deps
+      run_phase uninstall "$name" "$script" "$work" "$src"
+      ;;
     *)
       die "unknown --phase '$PHASE'"
       ;;
@@ -146,4 +183,3 @@ run_recipe() {
 for r in "${RECIPES[@]}"; do
   run_recipe "$r"
 done
-

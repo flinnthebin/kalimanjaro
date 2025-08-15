@@ -5,9 +5,14 @@ IFS=$'\n\t'
 
 # ---------- env ----------
 : "${PREFIX:=/usr/local}"
+: "${BIN:=bin}"
+: "${SHARE:=share}"
+: "${MAN:=share/man/man1}"
+: "${DEP:=libexec}"
 : "${SRC:?set by srcbuild}"
 : "${LIST=https://github.com/hackerschoice/THC-Archive/tree/master/Tools}"
 : "${RAW=https://raw.githubusercontent.com/hackerschoice/THC-Archive/master/Tools}"
+: "${SECTION:=1}"
 : "${NAME:=amap}"
 : "${DEPNAME:=amapcrap}"
 # ---------- env ----------
@@ -23,11 +28,11 @@ EOF
 pre() {
   log "[${NAME}] preflight: verify Tools listing and tarball URL"
 
-  # Check list page reachable
+  # check list page reachable
   curl -fsI "${LIST}" >/dev/null \
     || warn "[${NAME}] GitHub Tools listing unreachable"
 
-  # Try to parse latest version number
+  # parse latest version number
   local ver
   ver="$(curl -fsSL "${LIST}" \
         | grep -oE 'amap-[0-9]+\.[0-9]+\.tar\.gz' \
@@ -38,7 +43,7 @@ pre() {
     warn "[${NAME}] version parse failed"
   else
     log "[${NAME}] latest version detected: ${ver}"
-    # Check raw tarball URL
+    # check raw tarball URL
     curl -fsI "${RAW}/${NAME}-${ver}.tar.gz" >/dev/null \
       || warn "[${NAME}] tarball URL for v${ver} unreachable"
   fi
@@ -64,8 +69,7 @@ build() {
   local dir="${SRC}/${NAME}"
   log "[${NAME}] attempting ancient configure (expected to fail)…"
   set +e
-  quiet_run clean_env_configure "${dir}" ac_cv_prog_cc_works=yes ac_cv_prog_cc_cross=no -- --prefix="${PREFIX}" --with-ssl=/usr
-  local st=$?; set -e
+  quiet_run clean_env_configure "${dir}" ac_cv_prog_cc_works=yes ac_cv_prog_cc_cross=no -- --prefix="${PREFIX}" --with-ssl=/usr local st=$?; set -e
   if (( st == 0 )); then
     log "[amap] building via make"
     ( cd "${dir}" && quiet_run make -j"$(nproc)" || true )
@@ -91,54 +95,68 @@ install() {
   local dir="${SRC}/${NAME}"
   log "[${NAME}] installing"
   if [[ -f "${dir}/.direct-build" ]]; then
-    quiet_run with_sudo install -Dm755 "${dir}/${NAME}" "${PREFIX}/bin/${NAME}"
-    [[ -x "${dir}/${DEPNAME}" ]] && quiet_run with_sudo install -Dm755 "$dir/${DEPNAME}" "${PREFIX}/bin/${DEPNAME}"
+    quiet_run with_sudo install -Dm755 "${dir}/${NAME}" "${PREFIX}/${BIN}/${NAME}"
+    [[ -x "${dir}/${DEPNAME}" ]] && quiet_run with_sudo install -Dm755 "$dir/${DEPNAME}" "${PREFIX}/${BIN}/${DEPNAME}"
     for f in appdefs.resp appdefs.trig appdefs.rpc; do
-      quiet_run with_sudo install -Dm644 "${dir}/$f" "${PREFIX}/share/${NAME}/$f"
+      quiet_run with_sudo install -Dm644 "${dir}/$f" "${PREFIX}/${SHARE}/${NAME}/$f"
     done
-    quiet_run with_sudo install -Dm644 "${dir}/${NAME}.1" "${PREFIX}/share/man/man1/${NAME}.1" || true
-    [[ -f "${dir}/${DEPNAME}.1" ]] && quiet_run with_sudo install -Dm644 "${dir}/${DEPNAME}.1" "${PREFIX}/share/man/man1/${DEPNAME}.1" || true
+    quiet_run with_sudo install -Dm644 "${dir}/${NAME}.${SECTION}" "${PREFIX}/${MAN}/${NAME}.${SECTION}" || true
+    [[ -f "${dir}/${DEPNAME}.${SECTION}" ]] && quiet_run with_sudo install -Dm644 "${dir}/${DEPNAME}.${SECTION}" "${PREFIX}/${MAN}/${DEPNAME}.${SECTION}" || true
     command -v mandb >/dev/null && quiet_run with_sudo mandb || true
   else
     ( cd "${dir}" && quiet_run with_sudo make install || true )
     [[ -x "${dir}/${DEPNAME}" ]] && quiet_run with_sudo install -Dm755 "$dir/${DEPNAME}" "${PREFIX}"/bin/${DEPNAME}
-    [[ -f "${dir}/${DEPNAME}.1" ]] && quiet_run with_sudo install -Dm644 "$dir/${DEPNAME}.1" "${PREFIX}"/share/man/man1/${DEPNAME}.1 || true
+    [[ -f "${dir}/${DEPNAME}.${SECTION}" ]] && quiet_run with_sudo install -Dm644 "$dir/${DEPNAME}.${SECTION}" "${PREFIX}/${MAN}/${DEPNAME}.${SECTION}" || true
     command -v mandb >/dev/null && quiet_run with_sudo mandb || true
   fi
-  log "[${NAME}] installed to ${PREFIX}/bin/${NAME}"
-  [[ -x "{$PREFIX}/bin/${DEPNAME}" ]] && log "[${NAME}] installed amapcrap to "${PREFIX}"/bin/${DEPNAME}"
+  log "[${NAME}] installed to ${PREFIX}/${BIN}/${NAME}"
+  [[ -x "{$PREFIX}/${BIN}/${DEPNAME}" ]] && log "[${NAME}] installed ${DEPNAME} to "${PREFIX}"/${BIN}/${DEPNAME}"
 }
 
 post() {
   log "[${NAME}] post: smoke"
-  command -v "${PREFIX}/bin/${NAME}" >/dev/null || die "[${NAME}] binary missing"
+  command -v "${PREFIX}/${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
 
-  # exits 1; treat presence of version banner as success
+  # exits 1; version banner == success
   local out
-  out="$("${PREFIX}/bin/${NAME}" -h 2>&1 || true)"
+  out="$("${PREFIX}/${BIN}/${NAME}" -h 2>&1 || true)"
   echo "$out" | grep -qE '^amap v[0-9]+\.[0-9]+' \
     || warn "[${NAME}] help/version banner not detected"
 
-  if command -v "${PREFIX}/bin/${DEPNAME}" >/dev/null; then
+  if command -v "${PREFIX}/${BIN}/${DEPNAME}" >/dev/null; then
     local out2
-    out2="$("${PREFIX}/bin/${DEPNAME}" -h 2>&1 || true)"
+    out2="$("${PREFIX}/${BIN}/${DEPNAME}" -h 2>&1 || true)"
     echo "$out2" | grep -qE '^amapcrap v[0-9]+\.[0-9]+' \
       || warn "[${NAME}] ${DEPNAME} help/version banner not detected"
   fi
 
   # data files present and non-empty
   for f in appdefs.resp appdefs.trig appdefs.rpc; do
-    [[ -s "${PREFIX}/share/amap/$f" ]] || warn "[amap] missing or empty data file: $f"
+    [[ -s "${PREFIX}/${SHARE}/${NAME}/$f" ]] || warn "[${NAME}] missing or empty data file: $f"
   done
 
   # check required shared libs resolve
   if command -v ldd >/dev/null; then
-    ldd "${PREFIX}/bin/${NAME}" 2>/dev/null | grep -q "not found" && \
+    ldd "${PREFIX}/${BIN}/${NAME}" 2>/dev/null | grep -q "not found" && \
       warn "[${NAME}] missing shared libraries (ldd reported 'not found')"
   fi
 }
 
+uninstall() {
+  log "[${NAME}] removing installed files"
+  rm_if_exists \
+    "$PREFIX/${BIN}/${NAME}" \
+    "$PREFIX/${BIN}/${DEPNAME}" \
+    "$PREFIX/${SHARE}/${NAME}/appdefs.resp" \
+    "$PREFIX/${SHARE}/${NAME}/appdefs.trig" \
+    "$PREFIX/${SHARE}/${NAME}/appdefs.rpc" \
+    "$PREFIX/${MAN}/${NAME}.${SECTION}" \
+    "$PREFIX/${MAN}/${DEPNAME}.${SECTION}"
+  rmdir_safe "$PREFIX/${SHARE}/${NAME}"
+}
+
 case "${1:-}" in
-  deps|pre|fetch|build|install|post) "$1" ;;
-  *) die "usage: $0 {deps|pre|fetch|build|install|post}" ;;
+  deps|pre|fetch|build|install|post|uninstall) "$1" ;;
+  *) die "usage: $0 {deps|pre|fetch|build|install|post|uninstall}" ;;
 esac
+

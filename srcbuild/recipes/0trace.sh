@@ -5,8 +5,13 @@ IFS=$'\n\t'
 
 # ---------- env ----------
 : "${PREFIX:=/usr/local}"
+: "${BIN:=bin}"
+: "${MAN:=share/man/man1}"
+: "${DEP:=libexec}"
 : "${SRC:?set by srcbuild}"
 : "${REPO:=http://lcamtuf.coredump.cx/soft/0trace.tgz}"
+: "${FILE:=0trace.sh}"
+: "${PANDOC_MAN:=0}"
 : "${SECTION:=1}"
 : "${NAME:=0trace}"
 : "${DEPNAME:=sendprobe}"
@@ -30,7 +35,7 @@ _install_manpage_from_pandoc() {
   local out_man="${SRC}/${NAME}.${SECTION}"
 
   cat >"$tmp_md" <<'MD'
-% 0TRACE(1) 0trace | User Commands  
+% 0TRACE(1) 0trace |  Manual 
 # NAME  
 0trace — traceroute on established connections  
   
@@ -141,7 +146,7 @@ MD
 
   quiet_run gzip -f -9 "$out_man"
   quiet_run with_sudo install -Dm644 "${out_man}.gz" \
-    "${PREFIX}/share/man/man${SECTION}/${NAME}.${SECTION}.gz"
+    "${PREFIX}/${MAN}/${NAME}.${SECTION}.gz"
 
   # touch man-db (best-effort)
   if command -v mandb >/dev/null 2>&1; then
@@ -151,7 +156,7 @@ MD
 
 pre() {
   log "[{$NAME}] preflight: check upstream tarball"
-  curl -fsI "${REPO}" >/dev/null || warn "[0trace] HEAD failed for ${REPO} (will try anyway)"
+  curl -fsI "${REPO}" >/dev/null || warn "[${NAME}] HEAD failed for ${REPO} (will try anyway)"
 }
 
 fetch() {
@@ -175,18 +180,18 @@ build() {
     # - add PROBE default to PREFIX/libexec/0trace/sendprobe
     # - replace ./sendprobe with "$PROBE"
     quiet_run sed -E \
-      -e "1i PROBE=\${PROBE:-\"${PREFIX}\"/libexec/${NAME}/${DEPNAME}}" \
+      -e "1i PROBE=\${PROBE:-\"${PREFIX}\"/${DEP}/${NAME}/${DEPNAME}}" \
       -e 's#\./sendprobe#"$PROBE"#g' \
-      ${NAME}.sh > ${NAME}.patched
+      ${FILE} > ${NAME}.patched
     chmod +x ${NAME}.patched
   )
 }
 
 install() {
   log "[$NAME] installing"
-  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${DEPNAME}" "$PREFIX/libexec/${NAME}/${DEPNAME}"
-  quiet_run with_sudo install -Dm755 "$SRC/${NAME}/${NAME}.patched" "$PREFIX/bin/$NAME"
-  quiet_run with_sudo setcap cap_net_raw+ep "${PREFIX}/libexec/${NAME}/${DEPNAME}" || warn "[${NAME}] setcap failed; run ${NAME} with sudo"
+  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${DEPNAME}" "$PREFIX/${DEP}/${NAME}/${DEPNAME}"
+  quiet_run with_sudo install -Dm755 "$SRC/${NAME}/${NAME}.patched" "$PREFIX/${BIN}/$NAME"
+  quiet_run with_sudo setcap cap_net_raw+ep "${PREFIX}/${DEP}/${NAME}/${DEPNAME}" || warn "[${NAME}] setcap failed; run ${NAME} with sudo"
   log "[${NAME}] adding manpage"
   _install_manpage_from_pandoc
   log "[${NAME}] installed to ${PREFIX}/bin/${NAME}"
@@ -194,15 +199,25 @@ install() {
 
 post() {
   log "[${NAME}] post: smoke"
-  command -v "${PREFIX}/bin/${NAME}" >/dev/null || die "[${NAME}] binary missing"
-  "${PREFIX}/bin/${NAME}" -h >/dev/null || true
+  command -v "${PREFIX}/${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
+  "${PREFIX}/${BIN}/${NAME}" -h >/dev/null || true
   if command -v getcap >/dev/null; then
-    getcap "${PREFIX}/libexec/${NAME}/${DEPNAME}" | grep -q cap_net_raw || warn "[${NAME}] ${DEPNAME} missing cap_net_raw"
+    getcap "${PREFIX}/${DEP}/${NAME}/${DEPNAME}" | grep -q cap_net_raw || warn "[${NAME}] ${DEPNAME} missing cap_net_raw"
   fi
 }
 
+uninstall() {
+  log "[${NAME}] removing installed files"
+  rm_if_exists \
+    "$PREFIX/${BIN}/${NAME}" \
+    "$PREFIX/${DEP}/${NAME}/${DEPNAME}" \
+    "$PREFIX/${MAN}/${NAME}.${SECTION}.gz"
+  rmdir_safe "$PREFIX/${DEP}/${NAME}"
+}
+
+
 case "${1:-}" in
-  deps|pre|fetch|build|install|post) "$1" ;;
-  *) die "usage: $0 {deps|pre|fetch|build|install|post}" ;;
+  deps|pre|fetch|build|install|post|uninstall) "$1" ;;
+  *) die "usage: $0 {deps|pre|fetch|build|install|post|uninstall}" ;;
 esac
 

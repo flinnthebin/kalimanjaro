@@ -4,8 +4,11 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
-: "${PREFIX:=/usr/local}"
+: "${PREFIX:=/usr/local/bin}"
 : "${SRC:?set by srcbuild}"
+: "${REPO:=https://raw.githubusercontent.com/CiscoCXSecurity/apache-users/master/apache2.pl}"
+: "${NAME:="apache-users"}"
+: "${FILE:=apache2.pl}"
 # ---------- env ----------
 
 deps() {
@@ -23,39 +26,45 @@ EOF
 }
 
 pre() {
-  log "[apache-users] preflight: upstream script reachable"
-  curl -fsI "https://raw.githubusercontent.com/CiscoCXSecurity/apache-users/master/apache2.pl" >/dev/null \
-    || warn "[apache-users] upstream not reachable"
+  log "[${NAME}] preflight: upstream script reachable"
+  curl -fsI "${REPO}" >/dev/null \
+    || warn "[${NAME}] upstream not reachable"
 }
 
 fetch() {
   require_cmd curl
-  log "[apache-users] fetching apache2.pl"
-  mkdir -p "$SRC"
-  curl -fsSL "https://raw.githubusercontent.com/CiscoCXSecurity/apache-users/master/apache2.pl" \
-    -o "$SRC/apache2.pl"
+  log "[${NAME}] fetching ${FILE}"
+  mkdir -p "${SRC}"
+  curl -fsSL "${REPO}" \
+    -o "${SRC}/${FILE}"
 }
 
 build() {
-  log "[apache-users] no build step (perl script)"
-  quiet_run sed -i '1s@^#!.*perl.*@#!/usr/bin/env perl@' "$SRC/apache2.pl"
-  quiet_run chmod +x "$SRC/apache2.pl"
+  log "[${NAME}] no build step (perl script)"
+  quiet_run sed -i '1s@^#!.*perl.*@#!/usr/bin/env perl@' "$SRC/${FILE}"
+  quiet_run chmod +x "$SRC/${FILE}"
 }
 
 install() {
-  log "[apache-users] installing to $PREFIX/bin/apache-users"
-  quiet_run with_sudo install -Dm755 "$SRC/apache2.pl" "$PREFIX"/bin/apache-users
-  log "[apache-users] installed: $PREFIX/bin/apache-users"
+  log "[apache-users] installing to ${PREFIX}/${NAME}"
+  quiet_run with_sudo install -Dm755 "$SRC/${FILE}" "${PREFIX}/${NAME}"
+  log "[apache-users] installed: ${PREFIX}/${NAME}"
 }
 
 post() {
   log "[apache-users] post: smoke"
-  command -v "$PREFIX/bin/apache-users" >/dev/null || die "binary missing"
-  "$PREFIX/bin/apache-users" -h >/dev/null || true
-  perl -c "$PREFIX/bin/apache-users" >/dev/null || warn "perl syntax warn"
+  command -v "${PREFIX}/${NAME}" >/dev/null || die "binary missing"
+  "${PREFIX}/${NAME}" -h >/dev/null || true
+  perl -c "${PREFIX}/${NAME}" >/dev/null || warn "perl syntax warn"
+}
+
+uninstall() {
+  log "[${NAME}] removing installed files"
+  rm_if_exists "${PREFIX}/${NAME}"
 }
 
 case "${1:-}" in
-  deps|pre|fetch|build|install|post) "$1" ;;
-  *) die "usage: $0 {deps|pre|fetch|build|install|post}" ;;
+  deps|pre|fetch|build|install|post|uninstall) "$1" ;;
+  *) die "usage: $0 {deps|pre|fetch|build|install|post|uninstall}" ;;
 esac
+

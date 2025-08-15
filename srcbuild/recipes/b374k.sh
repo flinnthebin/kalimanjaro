@@ -5,12 +5,15 @@ IFS=$'\n\t'
 
 # ---------- env ----------
 : "${PREFIX:=/usr/local}"
+: "${BIN:=bin}"
+: "${MAN:=share/man/man1}"
 : "${SRC:?set by srcbuild}"
 : "${REPO:=https://github.com/b374k/b374k.git}"
-: "${PANDOC_MAN:=1}"           # 1=generate manpage from README.md
+: "${FILE:=index.php}"
+: "${PANDOC_MAN:=1}"
 : "${SECTION:=1}"
 : "${TITLE:=Manual}"
-: "${NAME:=$(basename "${0:-b374k.sh}" .sh)}"
+: "${NAME:=b374k}"
 # ---------- env ----------
 
 deps() {
@@ -30,22 +33,22 @@ deps() {
 _install_man_from_readme() {
   local readme candidates=( "README.md" "readme.md" "README" )
   for f in "${candidates[@]}"; do
-    [[ -f "${SRC}/$f" ]] && readme="${SRC}/$f" && break
+    [[ -f "${SRC}/${f}" ]] && readme="${SRC}/${f}" && break
   done
   [[ "${PANDOC_MAN}" == "1" && -n "${readme:-}" ]] || return 0
 
   local manfile="${SRC}/${NAME}.${SECTION}"
-  log "[${NAME}] generating manpage from $(basename "$readme") -> $(basename "$manfile").gz"
+  log "[${NAME}] generating manpage from $(basename "${readme}") -> $(basename "${manfile}").gz"
   quiet_run pandoc -s -t man \
     -V title="${NAME}" \
     -V section="${SECTION}" \
     -V header="${TITLE}" \
-    "$readme" -o "$manfile"
+    "${readme}" -o "${manfile}"
 
   # Compress and install
-  quiet_run gzip -f -9 "$manfile"
+  quiet_run gzip -f -9 "${manfile}"
   quiet_run with_sudo install -Dm644 "${manfile}.gz" \
-    "$PREFIX/share/man/man${SECTION}/${NAME}.${SECTION}.gz"
+    "${PREFIX}/${MAN}/${NAME}.${SECTION}.gz"
 
   # Refresh man-db
   if command -v mandb >/dev/null 2>&1; then
@@ -70,21 +73,29 @@ fetch() {
 
 build() {
   log "[${NAME}] no build step (php script)"
-  quiet_run chmod +x "$SRC/index.php"
+  quiet_run chmod +x "${SRC}/${FILE}"
 }
 
 
 install() {
   log "[${NAME}] install"
-  quiet_run with_sudo install -Dm755 "${SRC}/index.php" "$PREFIX/bin/${NAME}"
+  quiet_run with_sudo install -Dm755 "${SRC}/${FILE}" "${PREFIX}/${BIN}/${NAME}"
   log "[${NAME}] adding manpage"
   _install_man_from_readme
 }
 
 post() {
   log "[${NAME}] post: smoke"
-  command -v "${PREFIX}/bin/${NAME}" >/dev/null || die "[${NAME}] binary missing"
+  command -v "${PREFIX}/${BIN}/${NAME}" >/dev/null || die "[${NAME}] binary missing"
 }
+
+uninstall() {
+  log "[${NAME}] removing installed files"
+  rm_if_exists \
+    "${PREFIX}/${BIN}/${NAME}" \
+    "${PREFIX}/${MAN}/${NAME}.${SECTION}.gz"
+}
+
 
 case "${1:-}" in
   deps|pre|fetch|build|install|post) "$1" ;;
