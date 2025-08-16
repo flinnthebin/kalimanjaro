@@ -71,7 +71,8 @@ build() {
   local dir="${SRC}/${NAME}"
   log "[${NAME}] attempting ancient configure (expected to fail)…"
   set +e
-  quiet_run clean_env_configure "${dir}" ac_cv_prog_cc_works=yes ac_cv_prog_cc_cross=no -- --prefix="${PREFIX}" --with-ssl=/usr local st=$?; set -e
+  quiet_run clean_env_configure "${dir}" ac_cv_prog_cc_works=yes ac_cv_prog_cc_cross=no -- --prefix="${PREFIX}" --with-ssl=/usr 
+  local st=$?; set -e
   if (( st == 0 )); then
     log "[amap] building via make"
     ( cd "${dir}" && quiet_run make -j"$(nproc)" || true )

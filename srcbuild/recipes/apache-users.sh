@@ -4,7 +4,7 @@ IFS=$'\n\t'
 [[ -f "./lib/common.sh" ]] && source "./lib/common.sh"
 
 # ---------- env ----------
- "${NAME:="apache-users"}"
+: "${NAME:="apache-users"}"
 : "${PREFIX:=/usr/local}"
 : "${BIN:=${PREFIX}/bin}"
 : "${SRC:?set by srcbuild}"

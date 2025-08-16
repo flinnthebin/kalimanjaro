@@ -1,44 +1,26 @@
 #!/usr/bin/env bash
 # A tiny framework for building *and uninstalling* old tools from source cleanly on Arch/Manjaro.
 # Usage:
-#   ./build.sh [--debug] [--keep-work] [--phase P] [--no-deps] <recipe>...
-#   ./build.sh --uninstall <recipe>...
+#   ./srcbuildh [--debug] [--keep-work] [--phase P] [--no-deps] <recipe>...
+#   ./srcbuild --uninstall <recipe>...
 # Examples:
-#   ./build.sh amap
-#   ./build.sh --debug apple_bleee 0trace
-#   ./build.sh --phase pre amap
-#   ./build.sh --phase post --no-deps 0trace
-#   ./build.sh --uninstall 0trace amap
+#   ./srcbuild amap
+#   ./srcbuild --debug apple_bleee 0trace
+#   ./srcbuild --phase pre amap
+#   ./srcbuild --phase post --no-deps 0trace
+#   ./srcbuild --uninstall 0trace amap
 
 set -Eeuo pipefail
 IFS=$'\n\t'
 
-# ---------- Global flags / arg parsing ----------
+# ---------- Global flags ----------
 DEBUG=${DEBUG:-0}
 RECIPES=()
 KEEP_WORK=0
 PHASE="all"         # all | deps | pre | fetch | build | install | post | uninstall
 INSTALL_DEPS=1
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --debug) DEBUG=1; shift ;;
-    --keep-work) KEEP_WORK=1; shift ;;
-    --phase) PHASE="${2:-}"; shift 2 ;;
-    --no-deps) INSTALL_DEPS=0; shift ;;
-    --uninstall) PHASE="uninstall"; shift ;;
-    --list) find recipes -maxdepth 1 -name '*.sh' -printf '%f\n' | sed 's/\.sh$//'; exit 0 ;;
-    -h|--help)
-      printf "Usage: %s [--debug] [--keep-work] [--phase P] [--no-deps] <recipe>...\n" "$0"
-      printf "       %s --uninstall <recipe>...\n" "$0"
-      printf "Phases: all (default), deps, pre, fetch, build, install, post, uninstall\n"
-      exit 0 ;;
-    --) shift; break ;;
-    *) RECIPES+=("$1"); shift ;;
-  esac
-done
-
-[[ ${#RECIPES[@]} -gt 0 ]] || { printf "\033[1;31m[xx]\033[0m %s\n" "no recipes specified (try --list)"; exit 1; }
+INSTALL_ALL=0
+PACMAN_WAIT=3
 
 # ---------- Logging ----------
 log()  { printf "\033[1;34m==>\033[0m %s\n" "$*"; }
@@ -56,13 +38,6 @@ mkwork() {
   echo "$d"
 }
 
-ensure_pkgs() {
-  local pkgs=("$@")
-  [[ ${#pkgs[@]} -eq 0 ]] && return 0
-  require_cmd pacman
-  quiet_run with_sudo pacman -S --needed --noconfirm "${pkgs[@]}"
-}
-
 clean_env_configure() {
   # args: <dir> [extra env] -- <configure args...>
   local dir=$1; shift
@@ -78,7 +53,29 @@ clean_env_configure() {
   )
 }
 
-# --- extra helpers that recipes often need for uninstall ---
+list_recipes() {
+  find recipes -maxdepth 1 -type f -name '*.sh' -printf '%f\n' \
+    | sed 's/\.sh$//' \
+    | sort -V
+}
+
+wait_for_pacman_lock() {
+  local lock="/var/lib/pacman/db.lck"
+  while [[ -e "$lock" ]]; do
+    warn "pacman lock present ($lock); waiting 3s..."
+    sleep PACMAN_WAIT
+  done
+}
+
+ensure_pkgs() {
+  local pkgs=("$@")
+  [[ ${#pkgs[@]} -eq 0 ]] && return 0
+  require_cmd pacman
+  wait_for_pacman_lock
+  quiet_run with_sudo pacman -S --needed --noconfirm "${pkgs[@]}"
+}
+
+# --- uninstall helpers ---
 rm_if_exists() {
   # args: <path>...
   local p rc=0
@@ -132,9 +129,41 @@ run_phase() {
   fi
 }
 
+# ---------- arg parsing ----------
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --debug) DEBUG=1; shift ;;
+    --keep-work) KEEP_WORK=1; shift ;;
+    --phase) PHASE="${2:-}"; shift 2 ;;
+    --no-deps) INSTALL_DEPS=0; shift ;;
+    --uninstall) PHASE="uninstall"; shift ;;
+    --all) INSTALL_ALL=1; shift ;;
+    --list) find recipes -maxdepth 1 -name '*.sh' -printf '%f\n' | sed 's/\.sh$//' | sort -d; exit 0 ;;
+    -h|--help)
+      printf "Usage: %s [--debug] [--keep-work] [--phase P] [--no-deps] <recipe>...\n" "$0"
+      printf "       %s --uninstall <recipe>...\n" "$0"
+      printf "       %s --all [--phase P]\n" "$0"
+      printf "Phases: all (default), deps, pre, fetch, build, install, post, uninstall\n"
+      exit 0 ;;
+    --) shift; break ;;
+    *) RECIPES+=("$1"); shift ;;
+  esac
+done
+
+if (( INSTALL_ALL )); then
+  # if user lists explicit recipes, honor only those; else expand to all
+  if [[ ${#RECIPES[@]} -eq 0 ]]; then
+    mapfile -t RECIPES < <(list_recipes)
+  fi
+fi
+
+[[ ${#RECIPES[@]} -gt 0 ]] || { printf "\033[1;31m[xx]\033[0m %s\n" "no recipes specified (try --list or --all)"; exit 1; }
+
 # ---------- core runner ----------
 run_recipe() {
   local name="$1"
+  wait_for_pacman_lock
   local script="recipes/${name}.sh"
   [[ -x "$script" ]] || die "recipe not found or not executable: $name"
 

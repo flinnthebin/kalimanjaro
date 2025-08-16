@@ -47,22 +47,39 @@ install() {
 
   quiet_run with_sudo systemctl enable --now opensearch
 
-  # wait (best-effort)
-  local tries=30
-  while (( tries-- )); do
-    if curl -ks -u "${ES_USER}:${ES_PASS}" "${ES_URL}/_cat/health" >/dev/null; then
-      log "[${NAME}] healthy at ${ES_URL}"
-      break
+  # try to auto-detect URL/creds first if not set
+  _probe_es || true
+
+  # wait up to 90s for at least YELLOW health
+  for _ in $(seq 1 90); do
+    if [[ "$ES_URL" == https://* ]]; then
+      curl_flags="-ks"
+    else
+      curl_flags="-s"
+    fi
+    if [[ -n "${ES_USER:-}" ]]; then
+      curl $curl_flags -u "${ES_USER}:${ES_PASS}" \
+        "${ES_URL}/_cluster/health?wait_for_status=yellow&timeout=1s" >/dev/null && { log "[${NAME}] healthy at ${ES_URL}"; break; }
+    else
+      curl $curl_flags \
+        "${ES_URL}/_cluster/health?wait_for_status=yellow&timeout=1s" >/dev/null && { log "[${NAME}] healthy at ${ES_URL}"; break; }
     fi
     sleep 1
-  done
-  (( tries >= 0 )) || warn "[${NAME}] health check timed out"
+  done || true
 }
 
 post() {
   log "[${NAME}] post: smoke"
   systemctl is-active --quiet opensearch || warn "[${NAME}] service not active"
-  curl -ks -u "${ES_USER}:${ES_PASS}" "${ES_URL}" | grep -q '{' || warn "[${NAME}] HTTP probe failed"
+
+  _probe_es || warn "[${NAME}] probe couldn't contact OpenSearch"
+
+  if [[ "$ES_URL" == https://* ]]; then curl_flags="-ks"; else curl_flags="-s"; fi
+  if [[ -n "${ES_USER:-}" ]]; then
+    curl $curl_flags -u "${ES_USER}:${ES_PASS}" "${ES_URL}" | grep -q '{' || warn "[${NAME}] HTTP probe failed"
+  else
+    curl $curl_flags "${ES_URL}" | grep -q '{' || warn "[${NAME}] HTTP probe failed"
+  fi
 }
 
 uninstall() {

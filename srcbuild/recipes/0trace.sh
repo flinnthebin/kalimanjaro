@@ -24,7 +24,6 @@ gzip
 gcc
 libcap
 pandoc
-gzip
 man-db
 EOF
 }
@@ -34,7 +33,7 @@ _install_manpage_from_pandoc() {
   local tmp_md="${SRC}/${NAME}_man.md"
   local out_man="${SRC}/${NAME}.${SECTION}"
 
-  cat >"$tmp_md" <<'MD'
+  cat >"${tmp_md}" <<'MD'
 % 0TRACE(1) 0trace |  Manual 
 # NAME  
 0trace — traceroute on established connections  
@@ -142,9 +141,9 @@ Cheers,
 MD
 
   log "[${NAME}] generating manpage via pandoc"
-  quiet_run pandoc -s -t man "$tmp_md" -o "$out_man"
+  quiet_run pandoc -s -t man "${tmp_md}" -o "${out_man}"
 
-  quiet_run gzip -f -9 "$out_man"
+  quiet_run gzip -f -9 "${out_man}"
   quiet_run with_sudo install -Dm644 "${out_man}.gz" \
     "${MAN}/${NAME}.${SECTION}.gz"
 
@@ -155,7 +154,7 @@ MD
 }
 
 pre() {
-  log "[{$NAME}] preflight: check upstream tarball"
+  log "[${NAME}] preflight: check upstream tarball"
   curl -fsI "${REPO}" >/dev/null || warn "[${NAME}] HEAD failed for ${REPO} (will try anyway)"
 }
 
@@ -165,32 +164,35 @@ fetch() {
   log "[${NAME}] fetching sources from upstream"
   mkdir -p "${SRC}"
   local tgz="${SRC}/${NAME}.tgz"
-  quiet_run curl -fL "${REPO}" -o "$tgz"
-  quiet_run tar -xzf "$tgz" -C "$SRC"
-  [[ -d "${SRC}/${NAME}" ]] || die "[{$NAME}] expected directory {$SRC}/${NAME} missing after extract"
+  quiet_run curl -fL "${REPO}" -o "${tgz}"
+  quiet_run tar -xzf "${tgz}" -C "${SRC}"
+  [[ -d "${SRC}/${NAME}" ]] || die "[${NAME}] expected directory {${SRC}}/${NAME} missing after extract"
 }
 
 build() {
   log "[${NAME}] compiling ${DEP_NAME} & patching script"
   (
-    cd "$SRC/${NAME}"
-    quiet_run gcc -O2 -Wall -o "${DEP_NAME}" "${DEP_NAME}".c
+    cd "${SRC}/${NAME}"
+    quiet_run gcc -O2 -Wall -o "${DEP_NAME}" "${DEP_NAME}.c"
+    # Build header
+    local header="PROBE=\${PROBE:-\"${PREFIX}/${DEP}/${NAME}/${DEP_NAME}\"}"
+    # Prepend header and rewrite ./sendprobe -> "${PROBE}"
+    {
+      printf '%s\n' "$header"
+      sed -E 's#\./sendprobe#"\${PROBE}"#g' "${FILE}"
+    } > "${NAME}.patched"
 
-    # Patch 0trace.sh so it uses an installed helper:
-    # - add PROBE default to PREFIX/libexec/0trace/sendprobe
-    # - replace ./sendprobe with "$PROBE"
-    quiet_run sed -E \
-      -e "1i PROBE=\${PROBE:-\"${PREFIX}\"/${DEP}/${NAME}/${DEP_NAME}}" \
-      -e 's#\./sendprobe#"$PROBE"#g' \
-      ${FILE} > ${NAME}.patched
-    chmod +x ${NAME}.patched
+    chmod +x "${NAME}.patched"
+
+    # sanity check: fail if empty
+    [[ -s "${NAME}.patched" ]] || die "[${NAME}] patching produced empty script"
   )
 }
 
 install() {
-  log "[$NAME] installing"
-  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${DEP_NAME}" "$PREFIX/${DEP}/${NAME}/${DEP_NAME}"
-  quiet_run with_sudo install -Dm755 "$SRC/${NAME}/${NAME}.patched" "${BIN}/$NAME"
+  log "[${NAME}] installing"
+  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${DEP_NAME}" "${PREFIX}/${DEP}/${NAME}/${DEP_NAME}"
+  quiet_run with_sudo install -Dm755 "${SRC}/${NAME}/${NAME}.patched" "${BIN}/${NAME}"
   quiet_run with_sudo setcap cap_net_raw+ep "${PREFIX}/${DEP}/${NAME}/${DEP_NAME}" || warn "[${NAME}] setcap failed; run ${NAME} with sudo"
   log "[${NAME}] adding manpage"
   _install_manpage_from_pandoc
@@ -210,9 +212,9 @@ uninstall() {
   log "[${NAME}] removing installed files"
   rm_if_exists \
     "${BIN}/${NAME}" \
-    "$PREFIX/${DEP}/${NAME}/${DEP_NAME}" \
+    "${PREFIX}/${DEP}/${NAME}/${DEP_NAME}" \
     "${MAN}/${NAME}.${SECTION}.gz"
-  rmdir_safe "$PREFIX/${DEP}/${NAME}"
+  rmdir_safe "${PREFIX}/${DEP}/${NAME}"
 }
 
 

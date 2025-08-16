@@ -100,7 +100,7 @@ install() {
   # Optional CLI
   if [[ -f "${SRC}/${CLI}" ]]; then
     local destcli="${BIN}/${CLI}"
-    quiet_run with_sudo install -Dm755 "${SRC}/${CLI" "${destcli}"
+    quiet_run with_sudo install -Dm755 "${SRC}/${CLI}" "${destcli}"
   fi
 
   log "[${NAME}] installing config skeleton"
@@ -186,8 +186,8 @@ uninstall() {
   log "[${NAME}] cleanup complete"
 }
 
-
 case "${1:-}" in
   deps|pre|fetch|build|install|post|uninstall) "$1" ;;
   *) die "usage: $0 {deps|pre|fetch|build|install|post|uninstall}" ;;
 esac
+

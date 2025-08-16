@@ -43,15 +43,20 @@ pre() {
   log "[${NAME}] preflight: repos & PBS asset"
   curl -fsI "${REPO}" >/dev/null || warn "${NAME} repo unreachable"
   curl -fsI "${DEP_REPO}" >/dev/null || warn "${DEP_NAME} repo unreachable"
-  # PBS probe (no fail if GH rate-limited)
+
   local trip
   case "$(uname -m)" in
-    x86_64) trip="x86_64-unknown-linux-gnu";;
-    aarch64) trip="aarch64-unknown-linux-gnu";;
-    *) trip="";;
+    x86_64) trip="x86_64-unknown-linux-gnu" ;;
+    aarch64) trip="aarch64-unknown-linux-gnu" ;;
+    *) trip="" ;;
   esac
+
   [[ -n "${trip}" ]] && curl -fsSL "${PBS_LATEST}" \
-    | jq -er --arg t "${trip}" '.assets[]?.browser_download_url | select(test(${t}))' >/dev/null || warn "PBS probe failed"
+    | jq -er --arg t "${trip}" '
+        (.assets // [])[]?.browser_download_url
+        | select(test($t))
+      ' >/dev/null \
+    || warn "PBS probe failed"
 }
 
 _patch_pyfixes() {
@@ -84,18 +89,22 @@ _pbs_triplet() {
 _resolve_pbs_url() {
   local trip="$(_pbs_triplet)"
   local urls
-  urls="$(curl -fsSL "${PBS_LATEST}" \
+  urls="$(
+    curl -fsSL "${PBS_LATEST}" \
     | jq -r --arg trip "${trip}" '
-        ( .assets // [] )[]?.browser_download_url
-        | select(test("^https://.*/cpython-3\\.10\\.[0-9]+\\+[0-9]+-" + ${trip} + "-install_only\\.tar\\.(gz|zst|xz)$"))
-      ' 2>/dev/null | sort -V | tail -n1)" || true
+        (.assets // [])[]?.browser_download_url
+        | select(test("^https://.*/cpython-3\\.10\\.[0-9]+\\+[0-9]+-" + $trip + "-install_only\\.tar\\.(gz|zst|xz)$"))
+      ' 2>/dev/null | sort -V | tail -n1
+  )" || true
 
   if [[ -z "${urls}" ]]; then
-    urls="$(curl -fsSL "${PBS_REPO}?per_page=20" \
+    urls="$(
+      curl -fsSL "${PBS_REPO}?per_page=20" \
       | jq -r --arg trip "${trip}" '
           .[]?.assets[]?.browser_download_url
-          | select(test("^https://.*/cpython-3\\.10\\.[0-9]+\\+[0-9]+-" + ${trip} + "-install_only\\.tar\\.(gz|zst|xz)$"))
-        ' 2>/dev/null | sort -V | tail -n1)" || true
+          | select(test("^https://.*/cpython-3\\.10\\.[0-9]+\\+[0-9]+-" + $trip + "-install_only\\.tar\\.(gz|zst|xz)$"))
+        ' 2>/dev/null | sort -V | tail -n1
+    )" || true
   fi
   [[ -n "${urls}" ]] && { echo "${urls}"; return 0; }
   return 1
@@ -105,8 +114,8 @@ fetch() {
   require_cmd git
   log "[${NAME}] fetching sources"
   mkdir -p "${SRC}"
-  quiet_run git clone --depth=1 "${REPO}.git ${SRC}/${NAME}"
-  quiet_run git clone --depth=1 "${DEP_REPO}.git ${SRC}/${DEP_NAME}"
+  quiet_run git clone --depth=1 "${REPO}.git" "${SRC}/${NAME}"
+  quiet_run git clone --depth=1 "${DEP_REPO}.git" "${SRC}/${DEP_NAME}"
   ( cd "${SRC}/${DEP_NAME}" && quiet_run git submodule update --init )
 }
 
@@ -136,12 +145,12 @@ build() {
     s/^[[:space:]]*pycrypto[[:space:]]*$/pycryptodome/i;
     s/%[[:space:]]*$//;
     s/^[[:space:]]*pybluez([[:space:]]*(==[^[:space:]]+)?)?[[:space:]]*$/# pybluez (provided by system)/i
-  ' "${SRC}/apple_bleee/requirements.txt" > "${req_fixed}"
+  ' "${SRC}/${NAME}/requirements.txt" > "${req_fixed}"
 
   # fresh install path + sources
   quiet_run with_sudo rm -rf "${share_dir}"
   quiet_run with_sudo mkdir -p "${share_dir}"
-  quiet_run with_sudo cp -a "${SRC}/apple_bleee/." "${share_dir}/"
+  quiet_run with_sudo cp -a "${SRC}/${NAME}/." "${share_dir}/"
 
   log "[${NAME}] patching legacy Python syntax"
   _patch_pyfixes "${share_dir}"
@@ -219,15 +228,15 @@ fi
 export LD_PRELOAD="${LIBCRYPTO11}:${LIBSSL11}:${LD_PRELOAD:-}"
 export CTYPESCRYPTO_LIBCRYPTO="${LIBCRYPTO11}"'
 
-log "[{$NAME}] installed wrappers to ${BIN} (ble-read-state, adv-wifi, adv-airpods, airdrop-leak)"
+log "[${NAME}] installed wrappers to ${BIN} (ble-read-state, adv-wifi, adv-airpods, airdrop-leak)"
 }
 
 install() {
-  log "[{$NAME}] install handled during build; nothing to do"
+  log "[${NAME}] install handled during build; nothing to do"
 }
 
 post() {
-  log "[{$NAME}] post: smoke"
+  log "[${NAME}] post: smoke"
   for t in ble-read-state adv-wifi adv-airpods airdrop-leak; do
     command -v "${BIN}/${t}" >/dev/null || warn "wrapper missing: ${t}"
     "${BIN}/${t}" -h >/dev/null || true
@@ -238,6 +247,21 @@ post() {
     grep -q "OpenSSL 1.1 not found" /tmp/airdrop-leak.out || warn "airdrop-leak OpenSSL guard not hit"
   fi
 }
+
+uninstall() {
+  log "[${NAME}] removing installed files"
+  rm_if_exists \
+    "${BIN}/ble-read-state" \
+    "${BIN}/airdrop-leak" \
+    "${BIN}/adv-wifi" \
+    "${BIN}/adv-airpods" \
+    "${BIN}/${DEP_NAME}"
+  # in case upstream ever installs libs/headers
+  rm_if_exists "$PREFIX/lib/libawdl.a" "$PREFIX/lib/libradiotap.a"
+  with_sudo rm -rf "${SHARE}/${NAME}" 2>/dev/null || true
+  log "[${NAME}] cleanup complete"
+}
+
 
 case "${1:-}" in
   deps|pre|fetch|build|install|post|uninstall) "$1" ;;

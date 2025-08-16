@@ -69,17 +69,17 @@ build() { :; }  # shell script only
 install() {
   log "[${NAME}] installing"
   # Script
-  quiet_run with_sudo install -Dm755 "${SRC}/${FILE} ${BIN}/${NAME}"
+  quiet_run with_sudo install -Dm755 "${SRC}/${FILE}" "${BIN}/${NAME}"
 
   # Bash completion (if available)
   if [[ -f "${SRC}/bash_completion" ]]; then
-    quiet_run with_sudo install -Dm644 "${SRC}/bash_completion ${COMPLETIONS}/${NAME}"
+    quiet_run with_sudo install -Dm644 "${SRC}/bash_completion" "${COMPLETIONS}/${NAME}"
   fi
 
   # Config
   quiet_run with_sudo install -d /etc/"${NAME}"
   if [[ -f "${SRC}/${FILE}.conf" ]]; then
-    quiet_run with_sudo install -Dm644 "${SRC}/${FILE}.conf" /etc/"${NAME}/${NAME}".conf
+    quiet_run with_sudo install -Dm644 "${SRC}/${FILE}.conf" /etc/"${NAME}"/"${NAME}".conf
   else
     # minimal default
     with_sudo tee /etc/${NAME}/${NAME}.conf >/dev/null <<'CFG'
@@ -91,7 +91,7 @@ CFG
   fi
 
   # Systemd unit
-  local unit=${SYSTEMD}/${NAME}.service
+  local unit="${SYSTEMD}/${NAME}.service"
   if [[ -f "${SRC}/${NAME}.service" ]]; then
     # adapt ExecStart path & config location if needed
     sed -E \
